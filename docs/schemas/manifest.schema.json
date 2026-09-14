@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Asset Manifest",
+  "description": "Schema for the game asset manifest. See docs/core/manifest-contract.md.",
+  "type": "object",
+  "required": ["cdnBase", "bundles"],
+  "properties": {
+    "cdnBase": {
+      "type": "string",
+      "description": "Base URL or path for assets (e.g. /assets or https://cdn.example.com/game/assets)"
+    },
+    "localBase": {
+      "type": "string",
+      "description": "Optional fallback path if CDN is unavailable"
+    },
+    "bundles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ManifestBundle" },
+      "description": "List of asset bundles; bundle names must be unique"
+    }
+  },
+  "$defs": {
+    "AssetDefinition": {
+      "type": "object",
+      "required": ["alias", "src"],
+      "properties": {
+        "alias": {
+          "type": "string",
+          "description": "Unique identifier for this asset across all bundles"
+        },
+        "src": {
+          "type": "string",
+          "description": "Path relative to cdnBase; no leading slash, no .., no absolute URLs"
+        },
+        "data": {
+          "type": "object",
+          "description": "Optional loader-specific data (e.g., spritesheet JSON metadata)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "json", "spritesheet", "audioSprite"],
+          "description": "Content type hint. When omitted, the loader infers type from file extension or bundle kind."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Freeform tags for filtering, grouping, or generation metadata"
+        }
+      }
+    },
+    "ManifestBundle": {
+      "type": "object",
+      "required": ["name", "assets"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "description": "Unique bundle name; prefer reserved prefix (boot-, theme-, audio-, core-, scene-, fx-, data-)"
+        },
+        "assets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/AssetDefinition" },
+          "description": "Asset definitions within this bundle"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["boot", "theme", "audio", "data", "core", "scene", "fx"],
+          "description": "Optional semantic classification. When present, overrides prefix-based inference for validation. If both kind and a name prefix are present, they must be consistent."
+        }
+      }
+    }
+  }
+}

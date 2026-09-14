@@ -1,0 +1,83 @@
+# Template workflow for game repos — checks for new scaffold releases.
+#
+# Copy this file into your game repo at .github/workflows/scaffold-update-check.yml
+# It runs weekly and on manual trigger, opening an issue when a new scaffold version
+# is available.
+
+name: "Check Scaffold Updates"
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: package.json
+          sparse-checkout-cone-mode: false
+
+      - name: Get current scaffold version
+        id: current
+        run: |
+          VERSION=$(node -e "console.log(require('./package.json').scaffold?.version || '0.0.0')")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Current scaffold version: $VERSION"
+
+      - name: Get latest scaffold release
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE=$(gh api repos/wolfgames/scaffold-production/releases/latest --jq '.tag_name' 2>/dev/null || echo "")
+          if [ -z "$RELEASE" ]; then
+            echo "No scaffold releases found."
+            echo "version=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          VERSION="${RELEASE#scaffold-v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "url=$(gh api repos/wolfgames/scaffold-production/releases/latest --jq '.html_url')" >> "$GITHUB_OUTPUT"
+          echo "Latest scaffold version: $VERSION"
+
+      - name: Open issue if update available
+        if: steps.latest.outputs.version != '' && steps.latest.outputs.version != steps.current.outputs.version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.latest.outputs.version }}"
+          URL="${{ steps.latest.outputs.url }}"
+
+          # Skip if an open issue already exists
+          EXISTING=$(gh issue list --search "Scaffold update available: v$LATEST" --state open --json number --jq 'length')
+          if [ "$EXISTING" != "0" ]; then
+            echo "Issue already exists for v$LATEST, skipping."
+            exit 0
+          fi
+
+          gh issue create \
+            --title "Scaffold update available: v$LATEST" \
+            --body "$(cat <<EOF
+          A new scaffold version is available.
+
+          | | Version |
+          |---|---------|
+          | **Current** | v$CURRENT |
+          | **Latest** | v$LATEST |
+
+          [Release notes]($URL)
+
+          ## Update
+
+          \`\`\`bash
+          bun run scaffold:sync
+          bun run scaffold:verify
+          \`\`\`
+          EOF
+          )"

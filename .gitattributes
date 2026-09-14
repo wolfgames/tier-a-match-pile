@@ -1,0 +1,10 @@
+# Scaffold merge strategies
+# When merging scaffold updates into a game repo, auto-resolve game-owned
+# paths in favor of the game side (ours). This makes full merges safe for
+# routine scaffold upgrades — only app.tsx and package.json need manual review.
+
+# Game code — always keep the game side
+src/game/** merge=ours
+
+# Game-specific root files — always keep the game side
+wolf-game-kit.json merge=ours

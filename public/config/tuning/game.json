@@ -1,0 +1,68 @@
+{
+  "version": "1.0.0",
+  "grid": {
+    "tileSize": 96,
+    "defaultGridSize": 4,
+    "padding": 20,
+    "cellGap": 0,
+    "nineSlice": {
+      "leftWidth": 20,
+      "topHeight": 20,
+      "rightWidth": 20,
+      "bottomHeight": 20
+    }
+  },
+  "difficulty": {
+    "easy": {
+      "gridSize": 4,
+      "landmarkCount": { "min": 2, "max": 2 },
+      "detourProbability": 0.1,
+      "minPathLength": 3
+    },
+    "medium": {
+      "gridSize": 5,
+      "landmarkCount": { "min": 3, "max": 3 },
+      "detourProbability": 0.3,
+      "minPathLength": 4
+    },
+    "hard": {
+      "gridSize": 6,
+      "landmarkCount": { "min": 3, "max": 4 },
+      "detourProbability": 0.6,
+      "minPathLength": 5
+    }
+  },
+  "visuals": {
+    "backgroundColor": "#1a1a2e",
+    "roadConnectedTint": "#ffffff",
+    "roadDisconnectedTint": "#888888",
+    "landmarkConnectedScale": 1.1,
+    "landmarkConnectedAlpha": 1.0,
+    "landmarkDisconnectedAlpha": 0.9,
+    "highlightColor": "#ffcc00",
+    "connectedIndicatorColor": "#27ae60",
+    "disconnectedIndicatorColor": "#cccccc"
+  },
+  "sprites": {
+    "landmarkScale": 0.85,
+    "exitScale": 0.85,
+    "connectionIndicatorSize": 0.08,
+    "connectionIndicatorOffset": 0.42
+  },
+  "animation": {
+    "tileRotateDuration": 200,
+    "tileRotateEasing": "easeOutBack",
+    "connectionPulseDuration": 300,
+    "levelCompleteDelay": 500
+  },
+  "scoring": {
+    "baseScore": 100,
+    "timeBonus": 10,
+    "perfectBonus": 50,
+    "movesPenalty": 5
+  },
+  "screens": {
+    "startBackgroundColor": "#BCE083",
+    "loadingBackgroundColor": "#BCE083"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "version": "2.0",
+  "timestamp": "2025-02-25T00:00:00.000Z",
+  "aspectRatio": "16:9",
+  "spawners": [
+    {
+      "id": "sp1",
+      "name": "Default",
+      "position": { "x": 0, "y": 0 },
+      "visible": true,
+      "config": {
+        "textureName": "white-circle.png",
+        "alphaStart": 1,
+        "alphaEnd": 0,
+        "sizeMode": "pixels",
+        "sizeStartPixels": 30,
+        "sizeEndPixels": 10,
+        "scaleStart": 0.02,
+        "scaleEnd": 0.01,
+        "scaleVariance": 0.3,
+        "colorStart": { "r": 255, "g": 255, "b": 255 },
+        "colorEnd": { "r": 255, "g": 200, "b": 100 },
+        "speed": 5,
+        "speedVariance": 0.3,
+        "angle": 270,
+        "angleVariance": 30,
+        "acceleration": 0,
+        "gravity": 0.1,
+        "rotationStart": 0,
+        "rotationSpeed": 180,
+        "rotationVariance": 0,
+        "rotationDirection": "random",
+        "emitterStartDelay": 0,
+        "emitterLifetime": 0,
+        "emitterLifetimeVariance": 0,
+        "particleLifetime": 1,
+        "particleLifetimeVariance": 0.2,
+        "loop": true,
+        "emitting": true,
+        "burst": false,
+        "spawnRate": 30,
+        "maxParticles": 500,
+        "particlesPerWave": 3,
+        "blendMode": "add",
+        "autoPlay": true
+      }
+    }
+  ]
+}

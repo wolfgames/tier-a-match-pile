@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "engine": {
+    "targetFps": 60,
+    "antialias": true,
+    "backgroundAlpha": 1.0,
+    "resolution": 1
+  },
+  "debug": {
+    "showFps": false,
+    "showHitboxes": false,
+    "logLevel": "warn"
+  },
+  "animation": {
+    "defaultDuration": 300,
+    "defaultEasing": "easeOutQuad",
+    "transitionDuration": 300,
+    "transitionType": "fade"
+  },
+  "audio": {
+    "masterVolume": 0.5,
+    "musicVolume": 0.8,
+    "sfxVolume": 1.0,
+    "fadeInDuration": 500,
+    "fadeOutDuration": 300
+  },
+  "performance": {
+    "maxParticles": 1000,
+    "spritePoolSize": 100,
+    "enableCulling": true
+  },
+  "screens": {
+    "loadingMinDuration": 500,
+    "loadingFadeOut": 300
+  }
+}

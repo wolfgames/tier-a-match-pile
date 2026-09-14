@@ -1,0 +1,57 @@
+{
+  "extends": ["@wolfgames/game-dev/config/biome"],
+  "files": {
+    "includes": ["**", "!dist", "!index.html"]
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/core/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["~/modules/*", "~/modules/**"],
+                    "message": "core/ must not import from modules/ — dependency flows core → modules → game"
+                  },
+                  {
+                    "group": ["~/game/*", "~/game/**"],
+                    "message": "core/ must not import from game/ — dependency flows core → modules → game"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/modules/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["~/game/*", "~/game/**"],
+                    "message": "modules/ must not import from game/ — dependency flows core → modules → game"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

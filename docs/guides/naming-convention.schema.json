@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Asset Naming Convention",
+  "description": "Machine-readable spec for raw and packed asset filenames. Human-facing doc: naming-convention.md",
+  "type": "object",
+  "properties": {
+    "rawPattern": {
+      "description": "Pattern for raw (unpacked) asset filenames: {category}-{name}[_{variant}].{ext}",
+      "type": "object",
+      "properties": {
+        "regex": {
+          "type": "string",
+          "description": "Regex that a raw filename (basename only) must match. Captures: category prefix, name, optional variant, extension.",
+          "const": "^(piece|exit|character|bg|item|prop|ui|vfx|sfx|music)-([a-z0-9]+(?:_[a-z0-9]+)*)(_[a-z0-9]+)?\\.([a-zA-Z0-9]+)$"
+        },
+        "allowedExtensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Allowed file extensions for raw assets (lowercase).",
+          "default": ["png", "jpg", "jpeg", "webp", "gif", "svg", "wav", "mp3", "webm", "ogg", "m4a", "woff", "woff2", "ttf", "otf"]
+        }
+      }
+    },
+    "categories": {
+      "description": "Reserved category prefixes for raw assets.",
+      "type": "array",
+      "items": { "type": "string" },
+      "enum": ["piece", "exit", "character", "bg", "item", "prop", "ui", "vfx", "sfx", "music"]
+    },
+    "packedPatterns": {
+      "description": "Patterns for packed outputs (atlases, audio sprites, vfx). Filename (basename) must match one of these.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "pattern": { "type": "string", "description": "Regex for basename." }
+        }
+      },
+      "default": [
+        { "kind": "atlas", "pattern": "^atlas-[a-z0-9]+(-[a-z0-9]+)*\\.json$" },
+        { "kind": "atlasImage", "pattern": "^atlas-[a-z0-9]+(-[a-z0-9]+)*\\.(png|jpg|jpeg|webp|gif)$" },
+        { "kind": "sfx", "pattern": "^sfx-[a-z0-9]+(-[a-z0-9]+)*\\.json$" },
+        { "kind": "music", "pattern": "^music-[a-z0-9]+(-[a-z0-9]+)*\\.json$" },
+        { "kind": "vfx", "pattern": "^vfx-[a-z0-9]+(-[a-z0-9_]+)*\\.json$" }
+      ]
+    },
+    "rules": {
+      "type": "object",
+      "description": "Text rules for humans and generators.",
+      "properties": {
+        "lowercase": { "type": "boolean", "default": true },
+        "hyphenBetweenCategoryAndName": { "type": "boolean", "default": true },
+        "underscoreForMultiWordAndVariant": { "type": "boolean", "default": true },
+        "allowedCharacters": { "type": "string", "default": "a-z, 0-9, hyphen, underscore" }
+      }
+    }
+  }
+}

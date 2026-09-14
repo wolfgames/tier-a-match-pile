@@ -1,0 +1,75 @@
+{
+  "name": "template-amino",
+  "type": "module",
+  "scripts": {
+    "dev": "nucleo dev",
+    "build": "vite build",
+    "prebuild": "nucleo game check local --tier 0 --no-commit-hooks --warn-only",
+    "build:frozen": "VITE_IS_FROZEN=true vite build --base=./",
+    "build:qa": "vite build --mode qa",
+    "preview": "vite preview",
+    "format": "biome check --write .",
+    "format:src": "biome check --write ./src",
+    "check": "nucleo game check local",
+    "check:fix": "nucleo game check local --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test --config tests/e2e/playwright.config.ts",
+    "amino:sync": "bun run scripts/amino-sync.ts",
+    "amino:release": "bun run scripts/amino-release.ts",
+    "amino:verify": "bun run scripts/amino-verify.ts",
+    "amino:rollback": "bun run scripts/amino-rollback.ts",
+    "amino:drift": "bun run scripts/amino-drift.ts",
+    "assets:publish": "bun run check:assets && wolf-dev assets publish",
+    "assets:release": "wolf-dev assets release",
+    "assets:verify": "wolf-dev assets verify",
+    "check:assets": "bun run scripts/check-asset-naming.ts",
+    "check:manifest": "bun run scripts/check-manifest.ts",
+    "typecheck": "tsc --noEmit",
+    "lint:unused": "knip",
+    "cortex:setup": "node node_modules/@wolfgames/cortex/scripts/setup.mjs",
+    "cortex:refresh": "bun update @wolfgames/cortex",
+    "postinstall": "node node_modules/@wolfgames/cortex/scripts/setup.mjs && (nucleo game commit-hooks install 2>/dev/null || true)",
+    "prepare": "husky",
+    "use:local": "../../scripts/use-local.sh",
+    "use:remote": "../../scripts/use-remote.sh",
+    "status": "../../scripts/status.sh"
+  },
+  "cortex": {
+    "profile": "default"
+  },
+  "dependencies": {
+    "@adobe/data": "^0.9.103",
+    "@sentry/solid": "^10.72.0",
+    "@wolfgames/client": "^0.1.37",
+    "@wolfgames/components": "^2.4.2",
+    "@wolfgames/cortex": "^0.5.0",
+    "arktype": "^2.2.3",
+    "gsap": "^3.15.0",
+    "howler": "^2.2.4",
+    "pixi.js": "^8.20.1",
+    "posthog-js": "^1.422.5",
+    "solid-js": "^1.9.15",
+    "tweakpane": "^4.0.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.11",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/howler": "^2.2.13",
+    "@wolfgames/game-dev": "^0.1.1",
+    "husky": "^9.1.7",
+    "knip": "^6.33.0",
+    "qrcode-terminal": "^0.12.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^6.4.3",
+    "vite-plugin-solid": "^2.11.14",
+    "vitest": "^2.1.9"
+  },
+  "amino": {
+    "version": "1.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
