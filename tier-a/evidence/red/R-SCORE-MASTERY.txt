@@ -1,0 +1,23 @@
+Rule: R-SCORE-MASTERY
+Test: it("R-SCORE-MASTERY (red) — mastery is rated on a 0-5 star scale, not 0-3", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-MASTERY
+AssertionError: expected 3 to be 5 // Object.is equality
+
+- Expected
++ Received
+
+- 5
++ 3
+
+Root cause: scoring.ts#starsForScore's return type and logic cap at 3
+(0|1|2|3). Confirms the template's 0-5 mastery scale
+(docs/scoring-system.md#mastery-rating-05-stars) is not yet adopted — this is
+the known-stale implementation flagged in docs/GAME-DESIGN.md's Decision Log,
+intentionally not fixed by this documentation/RED-test pass.

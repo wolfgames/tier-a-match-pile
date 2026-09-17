@@ -1,0 +1,26 @@
+Rule: R-ORDERS-WIN (supersedes R-WIN — see tier-a/REFERENCE_MATRIX.json)
+Test: it("R-ORDERS-WIN — a level wins once all Orders are satisfied, even with distractor tiles remaining", ...)
+Files: tests/unit/game/orders.test.ts, tests/unit/game/rules.test.ts (rewritten in place, formerly the R-WIN test)
+
+Command: bunx vitest run tests/unit/game/orders.test.ts tests/unit/game/rules.test.ts
+Exit code: 1 (both files fail — this rule's assertion, other rules in the same
+files still pass; see tier-a/evidence/red/RUN-2026-09-15.txt for the full run)
+
+Failure output:
+
+ FAIL  tests/unit/game/orders.test.ts > Orders system (red phase — unimplemented) > R-ORDERS-WIN — a level wins once all Orders are satisfied, even with distractor tiles remaining
+AssertionError: expected 'playing' to be 'won' // Object.is equality
+
+- Expected
++ Received
+
+- won
++ playing
+
+ ❯ tests/unit/game/orders.test.ts:36:19
+
+Root cause: production winFail()/step() only ever check tiles.length === 0 to
+decide "won" — there is no `orders` concept anywhere in the rules engine, so
+a state where all Order-relevant triples are cleared but distractor tiles
+remain never resolves to 'won'. This is the intended, correct-reason red
+failure for Orders being unimplemented (docs/GAME-DESIGN.md#core-loop).

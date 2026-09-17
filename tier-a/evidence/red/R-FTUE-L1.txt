@@ -1,0 +1,17 @@
+Rule: R-FTUE-L1
+Test: it("step 1 teaches tap-3-identical; step 2 highlights the Order Slots and requires Continue", ...) under describe("R-FTUE-L1 (red) ...")
+File: tests/unit/tier-a/ftue.test.ts
+
+Command: bunx vitest run tests/unit/tier-a/ftue.test.ts
+Exit code: 1 (this describe block fails; the pre-existing U10/U11 blocks in
+the same file still pass)
+
+Failure output:
+
+ FAIL  tests/unit/tier-a/ftue.test.ts > R-FTUE-L1 (red) — Level 1 has two Continue-gated, Timer-paused instructions > step 1 teaches tap-3-identical; step 2 highlights the Order Slots and requires Continue
+AssertionError: expected 1 to be 2 // Object.is equality
+
+Root cause: tutorial/steps.ts#stepsFor(1) returns exactly one step today, with
+no Continue-gating or timer-paused metadata at all. Confirms Level 1's
+two-instruction, Continue-gated, Timer-paused-until-Continue structure
+(docs/GAME-DESIGN.md#level-1--core-mechanics) is unimplemented.

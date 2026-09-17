@@ -1,0 +1,19 @@
+Rule: R-TIMER-PAUSE (supersedes R-NO-TIMER — see tier-a/REFERENCE_MATRIX.json)
+Test: it("R-TIMER-PAUSE — the timer resource does not advance while timerRunning is false (FTUE instruction states)", ...) in tests/unit/game/timer.test.ts
+       it("R-TIMER-PAUSE (red — Timer not implemented) — a Timer/tick module exists for the ECS layer", ...) in tests/unit/game/rules.test.ts (formerly the R-NO-TIMER test, rewritten in place)
+
+Command: bunx vitest run tests/unit/game/timer.test.ts tests/unit/game/rules.test.ts
+Exit code: 1 (both assertions fail; other rules in rules.test.ts still pass)
+
+Failure output:
+
+ FAIL  tests/unit/game/timer.test.ts > Timer system (red phase — unimplemented) > R-TIMER-PAUSE
+AssertionError: no timerRunning resource field yet: expected false to be true // Object.is equality
+
+ FAIL  tests/unit/game/rules.test.ts > Match Pile rules — reference & production spec > R-TIMER-PAUSE (red — Timer not implemented) — a Timer/tick module exists for the ECS layer
+AssertionError: ecs/transactions/tickTimer does not exist yet: expected null not to be null
+
+Root cause: src/game/match-pile/ecs/resources.ts has no timerRunning /
+timerRemainingMs / timerBudgetMs fields, and no tickTimer transaction exists —
+there is nothing to pause. Confirms Timer pause-during-FTUE
+(docs/GAME-DESIGN.md#timer, #ftue) is unimplemented.

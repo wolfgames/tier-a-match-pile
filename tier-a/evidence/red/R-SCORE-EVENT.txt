@@ -1,0 +1,16 @@
+Rule: R-SCORE-EVENT
+Test: it("R-SCORE-EVENT / R-SCORE-STREAK / R-SCORE-STREAK-RESET / R-SCORE-ACCURACY (red) — a per-triple-match scoring module exists", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-EVENT / R-SCORE-STREAK / R-SCORE-STREAK-RESET / R-SCORE-ACCURACY
+AssertionError: a per-successful-triple time-efficiency/streak/accuracy module (per docs/scoring-system.md) does not exist yet: expected null not to be null
+
+Root cause: `~/game/match-pile/scoring/templateScoring` does not exist.
+scoring.ts has no concept of "a completed triple match" as the scoring event
+at all. Confirms docs/scoring-system.md#match-pile-event-semantics is
+unimplemented.

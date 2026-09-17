@@ -11,15 +11,19 @@ import { useGameTracking } from '~/game/setup/tracking';
 
 import type { GameTuning } from '~/game/tuning';
 import { useGameData } from '~/game/screens/useGameData';
+import { useDynamicGameConfig } from '~/game/screens/useDynamicGameConfig';
 
 // Game-specific controller — swap this import for a different game
-import { setupGame } from '~/game/mygame/screens/gameController';
+import { setupGame } from '~/game/match-pile/screens/gameController';
 
 export default function GameScreen() {
   const { coordinator } = useAssets();
   const tuning = useTuning<ScaffoldTuning, GameTuning>();
   const audio = useAudio();
   const gameData = useGameData();
+  // Resolves progression/difficulty/scoring/content from Wolf DynamicData (schemas/registry.ts)
+  // and applies it in place once resolved — see useDynamicGameConfig.ts for the fallback posture.
+  useDynamicGameConfig();
   const { service: analytics } = useGameTracking();
   const { goto } = useScreen();
   let containerRef: HTMLDivElement | undefined;

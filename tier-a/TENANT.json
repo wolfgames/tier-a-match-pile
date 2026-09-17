@@ -1,0 +1,16 @@
+{
+  "$schema": "wolf-tier-a-brand-sheet/1",
+  "tenant": "mcdonalds",
+  "displayName": "McDonald's",
+  "primary": "#DA291C",
+  "secondary": "#FBF6E0",
+  "accent": "#FFC72C",
+  "onPrimary": "#FFC72C",
+  "type": {
+    "display": "Montserrat",
+    "numeric": "Rubik"
+  },
+  "logo": "asset://mark-mcdonalds",
+  "watermark": "asset://mark-mcdonalds-arches",
+  "link": "https://www.mcdonalds.com"
+}

@@ -1,0 +1,332 @@
+[
+  {
+    "id": "ftue-1",
+    "seed": 0,
+    "puzzle": {
+      "tiles": [
+        {
+          "id": "ftue1-a0",
+          "typeId": "fries",
+          "col": 0,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "ftue1-a1",
+          "typeId": "fries",
+          "col": 1,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "ftue1-a2",
+          "typeId": "fries",
+          "col": 2,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "ftue1-b0",
+          "typeId": "soda-cup",
+          "col": 3,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "ftue1-b1",
+          "typeId": "soda-cup",
+          "col": 4,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "ftue1-b2",
+          "typeId": "soda-cup",
+          "col": 0,
+          "row": 1,
+          "layer": 0
+        }
+      ],
+      "tray": [],
+      "cleared": 0,
+      "phase": "playing"
+    },
+    "solution": [
+      "ftue1-a0",
+      "ftue1-a1",
+      "ftue1-a2",
+      "ftue1-b0",
+      "ftue1-b1",
+      "ftue1-b2"
+    ],
+    "tier": "easy",
+    "difficultyScore": 0.3357142857142857,
+    "canonicalKey": "0,0,0|0,1,0|1,0,0|2,0,0|3,0,0|4,0,0::3,3",
+    "provenance": "handcrafted",
+    "prescribedInput": [
+      "ftue1-a0",
+      "ftue1-a1",
+      "ftue1-a2"
+    ]
+  },
+  {
+    "id": "ftue-2",
+    "seed": 0,
+    "puzzle": {
+      "tiles": [
+        {
+          "id": "t0",
+          "typeId": "iced-coffee",
+          "col": 3,
+          "row": 2,
+          "layer": 0
+        },
+        {
+          "id": "t1",
+          "typeId": "iced-coffee",
+          "col": 2,
+          "row": 3,
+          "layer": 0
+        },
+        {
+          "id": "t2",
+          "typeId": "iced-coffee",
+          "col": 3,
+          "row": 3,
+          "layer": 0
+        },
+        {
+          "id": "t3",
+          "typeId": "iced-coffee",
+          "col": 4,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "t4",
+          "typeId": "iced-coffee",
+          "col": 2,
+          "row": 3,
+          "layer": 1
+        },
+        {
+          "id": "t5",
+          "typeId": "iced-coffee",
+          "col": 1,
+          "row": 1,
+          "layer": 0
+        },
+        {
+          "id": "t6",
+          "typeId": "filet-o-fish",
+          "col": 3,
+          "row": 2,
+          "layer": 1
+        },
+        {
+          "id": "t7",
+          "typeId": "filet-o-fish",
+          "col": 2,
+          "row": 2,
+          "layer": 0
+        },
+        {
+          "id": "t8",
+          "typeId": "filet-o-fish",
+          "col": 1,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "t9",
+          "typeId": "filet-o-fish",
+          "col": 1,
+          "row": 4,
+          "layer": 0
+        },
+        {
+          "id": "t10",
+          "typeId": "filet-o-fish",
+          "col": 3,
+          "row": 2,
+          "layer": 2
+        },
+        {
+          "id": "t11",
+          "typeId": "filet-o-fish",
+          "col": 0,
+          "row": 1,
+          "layer": 0
+        }
+      ],
+      "tray": [],
+      "cleared": 0,
+      "phase": "playing"
+    },
+    "solution": [
+      "t9",
+      "t10",
+      "t11",
+      "t6",
+      "t7",
+      "t8",
+      "t3",
+      "t4",
+      "t5",
+      "t0",
+      "t1",
+      "t2"
+    ],
+    "tier": "easy",
+    "difficultyScore": 0.3382142857142857,
+    "canonicalKey": "0,1,0|1,0,0|1,1,0|1,4,0|2,2,0|2,3,0|2,3,1|3,2,0|3,2,1|3,2,2|3,3,0|4,0,0::6,6",
+    "provenance": "generated",
+    "prescribedInput": [
+      "t9",
+      "t10",
+      "t11"
+    ]
+  },
+  {
+    "id": "ftue-3",
+    "seed": 1,
+    "puzzle": {
+      "tiles": [
+        {
+          "id": "t0",
+          "typeId": "bbq-sauce-packet",
+          "col": 2,
+          "row": 2,
+          "layer": 0
+        },
+        {
+          "id": "t1",
+          "typeId": "bbq-sauce-packet",
+          "col": 2,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "t2",
+          "typeId": "bbq-sauce-packet",
+          "col": 1,
+          "row": 2,
+          "layer": 0
+        },
+        {
+          "id": "t3",
+          "typeId": "salad-bowl",
+          "col": 4,
+          "row": 4,
+          "layer": 0
+        },
+        {
+          "id": "t4",
+          "typeId": "salad-bowl",
+          "col": 0,
+          "row": 1,
+          "layer": 0
+        },
+        {
+          "id": "t5",
+          "typeId": "salad-bowl",
+          "col": 2,
+          "row": 3,
+          "layer": 0
+        },
+        {
+          "id": "t6",
+          "typeId": "happy-meal-box",
+          "col": 1,
+          "row": 1,
+          "layer": 0
+        },
+        {
+          "id": "t7",
+          "typeId": "happy-meal-box",
+          "col": 0,
+          "row": 0,
+          "layer": 0
+        },
+        {
+          "id": "t8",
+          "typeId": "happy-meal-box",
+          "col": 2,
+          "row": 4,
+          "layer": 0
+        },
+        {
+          "id": "t9",
+          "typeId": "happy-meal-box",
+          "col": 2,
+          "row": 2,
+          "layer": 1
+        },
+        {
+          "id": "t10",
+          "typeId": "happy-meal-box",
+          "col": 0,
+          "row": 0,
+          "layer": 1
+        },
+        {
+          "id": "t11",
+          "typeId": "happy-meal-box",
+          "col": 3,
+          "row": 1,
+          "layer": 0
+        },
+        {
+          "id": "t12",
+          "typeId": "bbq-sauce-packet",
+          "col": 4,
+          "row": 4,
+          "layer": 1
+        },
+        {
+          "id": "t13",
+          "typeId": "bbq-sauce-packet",
+          "col": 2,
+          "row": 4,
+          "layer": 1
+        },
+        {
+          "id": "t14",
+          "typeId": "bbq-sauce-packet",
+          "col": 0,
+          "row": 1,
+          "layer": 1
+        }
+      ],
+      "tray": [],
+      "cleared": 0,
+      "phase": "playing"
+    },
+    "solution": [
+      "t12",
+      "t13",
+      "t14",
+      "t9",
+      "t10",
+      "t11",
+      "t6",
+      "t7",
+      "t8",
+      "t3",
+      "t4",
+      "t5",
+      "t0",
+      "t1",
+      "t2"
+    ],
+    "tier": "easy",
+    "difficultyScore": 0.576,
+    "canonicalKey": "0,0,0|0,0,1|0,1,0|0,1,1|1,1,0|1,2,0|2,0,0|2,2,0|2,2,1|2,3,0|2,4,0|2,4,1|3,1,0|4,4,0|4,4,1::3,6,6",
+    "provenance": "generated",
+    "prescribedInput": [
+      "t12",
+      "t13",
+      "t14"
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "mutate": ["src/game/match-pile/rules/**/*.ts", "src/game/match-pile/scoring/**/*.ts", "src/game/match-pile/ecs/transactions/**/*.ts", "!**/*.test.ts", "!**/reference.ts"],
+  "vitest": { "configFile": "vitest.config.ts" },
+  "thresholds": { "high": 95, "low": 90, "break": 90 },
+  "reporters": ["clear-text", "json"],
+  "jsonReporter": { "fileName": "tier-a/reports/mutation.json" },
+  "concurrency": 4,
+  "timeoutMS": 20000
+}

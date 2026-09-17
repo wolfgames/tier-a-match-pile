@@ -1,0 +1,11 @@
+Rule: R-SCORE-DETERMINISTIC
+Test: it("R-SCORE-DETERMINISTIC (already green — locked-in regression guard) — computeScore is a pure function of its RunOutcome input", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 0 for this test (PASS)
+
+Status: GREEN, not red. computeScore/starsForScore are already pure functions
+of their inputs with no Math.random()/clock reads inside them. Recorded here
+as a locked-in regression guard for the eventual scoring rewrite
+(docs/scoring-system.md#design-goals — "Deterministic").

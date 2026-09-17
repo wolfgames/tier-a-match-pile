@@ -1,0 +1,16 @@
+Rule: R-SCORE-NO-PENALTY
+Test: it("R-SCORE-NO-PENALTY (red) — no scoring function subtracts a flat penalty for a wrong attempt", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-NO-PENALTY
+AssertionError: cannot verify the no-direct-penalty contract — the new scoring module does not exist yet (current scoring.ts instead subtracts MOVE_COST/HINT_COST directly from a budget, which is superseded): expected null not to be null
+
+Root cause: the current formula (computeScore) directly subtracts
+MOVE_COST*movesUsed and HINT_COST*hintsUsed from a fixed BUDGET — a direct
+penalty model, the opposite of docs/scoring-system.md's "errors cost only
+indirectly" requirement. Confirms this design goal is unimplemented.

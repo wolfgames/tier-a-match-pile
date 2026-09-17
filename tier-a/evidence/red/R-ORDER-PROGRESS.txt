@@ -1,0 +1,16 @@
+Rule: R-ORDER-PROGRESS
+Test: it("R-ORDER-PROGRESS — completing a matching triple advances that Order's progress by MATCH_SIZE (3), capped at requiredQty", ...)
+File: tests/unit/game/orders.test.ts
+
+Command: bunx vitest run tests/unit/game/orders.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/orders.test.ts > Orders system (red phase — unimplemented) > R-ORDER-PROGRESS
+AssertionError: expected undefined to be 3 // Object.is equality
+
+Root cause: production step() carries no Order-progress concept at all —
+`next.orders` is undefined on the returned PileState, so progress can't be
+observed. Confirms Orders progress tracking (docs/GAME-DESIGN.md#orders) is
+unimplemented.

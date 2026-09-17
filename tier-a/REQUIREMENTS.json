@@ -1,0 +1,47 @@
+{
+  "game": "Match Pile",
+  "slug": "match-pile",
+  "generatedBy": "tier-a-research-v4",
+  "phase": "research",
+  "defaults": [
+    {
+      "id": "R-NO-TIMER",
+      "decision": "No countdown timer in base mode; paced by tray capacity only.",
+      "rationale": "Conflicting single-source claim of a timer vs. majority/official evidence of none; brief asks for the simplest possible core loop. See REFERENCE_MATRIX.json#R-NO-TIMER."
+    },
+    {
+      "id": "UX-POWERUPS-DESCOPE",
+      "decision": "Ship only the contract-required hint. Shuffle/undo/hammer/+1-slot are genre-standard but out of MVP scope.",
+      "rationale": "Brief: 'keep the core loop extremely simple'. See REFERENCE_MATRIX.json#UX-POWERUPS-DESCOPE."
+    },
+    {
+      "id": "UX-OBJECT-POOL",
+      "decision": "24-item semantic McDonald's object pool (see REFERENCE_MATRIX.json#UX-OBJECT-POOL) as opaque content-layer type ids.",
+      "rationale": "Brief names the object categories but not an exact list; picked 24 concrete, instantly-recognizable items across food/drink/packaging to give later phases (assets) a stable, sizeable pool."
+    },
+    {
+      "id": "MODE-DIFFICULTY-LADDER",
+      "decision": "3-axis difficulty model (object count / distinct types / grid tightness) with concrete tier thresholds — see REFERENCE_MATRIX.json#MODE-DIFFICULTY-LADDER.",
+      "rationale": "No hard numeric thresholds found in any source for this genre; thresholds are our design judgment, validated by the generator's own solvability + rating pipeline (content/reports/CONTENT_REPORT.md)."
+    },
+    {
+      "id": "FTUE-LEVELS",
+      "decision": "Levels 1-3 are hand-selected/authored (not drawn from the dynamic 30-level pack). Level 1 uses only 2 distinct object types with zero stacking (single layer, all objects exposed from the start), which makes it structurally unloseable (max simultaneous incomplete-tray occupancy with 2 types is bounded well under TRAY_SIZE=7) — satisfies U11 without a special-cased rule.",
+      "rationale": "ux-contract.md §Defaults 'FTUE levels 1-3, level 1 prescribes the exact input and cannot be failed (U11)'."
+    }
+  ],
+  "unknowns": [
+    {
+      "id": "R-EXPOSURE",
+      "question": "Match Factory's true pile occlusion is freeform pixel/bounding-box overlap between arbitrarily placed & rotated sprites, not a discrete grid. Should the pure rules engine model that exactly, or a simplified discrete equivalent?",
+      "assumedDecision": "Discrete (col,row)+layer grid-stack model: an object is selectable iff it is the topmost remaining object at its cell. Structurally equivalent in spirit (occlusion by what's 'on top'), deterministic, and directly testable with fast-check; visual freeform scatter is deferred to the Pixi board renderer in the build phase, which can jitter each cell's on-screen position/rotation without touching the underlying logic.",
+      "rationale": "A pure grid model is the standard simplification used by this genre's closest documented, source-available cousin (Mahjong Solitaire); reproducing true continuous bounding-box overlap in the logic layer would add real complexity with no gameplay-legible benefit and no available reference implementation to adopt."
+    },
+    {
+      "id": "R-NO-TIMER-CONFLICT",
+      "question": "One third-party guide (mohanadpc.com) claims Match Factory levels have countdown timers; the official Play Store listing and majority of sources describe a zen/no-timer experience.",
+      "assumedDecision": "No timer in the base/MVP mode (see R-NO-TIMER above).",
+      "rationale": "Majority + official source + product brief's simplicity goal all point the same direction; the single conflicting claim most likely describes a special event/objective mode layered on top of the base loop, not the core mechanic we're building."
+    }
+  ]
+}

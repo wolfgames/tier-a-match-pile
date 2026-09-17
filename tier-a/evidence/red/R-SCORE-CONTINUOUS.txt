@@ -1,0 +1,17 @@
+Rule: R-SCORE-CONTINUOUS
+Test: it("R-SCORE-CONTINUOUS (red) — score varies continuously across realistic move counts instead of collapsing to a floor", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-CONTINUOUS
+AssertionError: expected 1000 not to be 1000 // Object.is equality (twentyMoves vs thirtyMoves both floor to WIN_FLOOR)
+
+Root cause: current scoring.ts's BUDGET(300000)/MOVE_COST(30000) constants
+collapse any medium/hard-tier win (9-30 moves, per generator/objectTypes.ts)
+to the same WIN_FLOOR score — confirmed during the earlier compliance audit.
+Confirms continuous, granular scoring (docs/scoring-system.md#design-goals)
+is not yet implemented; the old formula is superseded.

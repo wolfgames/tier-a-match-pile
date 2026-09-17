@@ -1,0 +1,15 @@
+Rule: R-FTUE-L3
+Test: it("a scripted-demo module exists and resolves A|A|B + another A as a match", ...) under describe("R-FTUE-L3 (red) ...")
+File: tests/unit/tier-a/ftue.test.ts
+
+Command: bunx vitest run tests/unit/tier-a/ftue.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/tier-a/ftue.test.ts > R-FTUE-L3 (red) — Level 3 scripts a non-adjacent A|A|B Slots Row match > a scripted-demo module exists and resolves A|A|B + another A as a match
+AssertionError: tutorial/slotsRowDemo (or equivalent Level-3 scripted state) does not exist yet: expected null not to be null
+
+Root cause: no scripted Level-3 tutorial state exists anywhere in
+src/game/match-pile/tutorial/. Confirms the non-adjacent A|A|B match
+demonstration (docs/GAME-DESIGN.md#level-3--slots-row) is unimplemented.

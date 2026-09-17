@@ -1,0 +1,89 @@
+{
+  "$schema": "wolf-tier-a-brand-tokens/2",
+  "tenant": "mcdonalds",
+  "displayName": "McDonald's",
+  "light": {
+    "base": "#DDE1E0",
+    "panel": "#E8EBED",
+    "text": "#5B6E80",
+    "grid": "#1C1C1E",
+    "primary": "#DA291C",
+    "secondary": "#FBF6E0",
+    "accent": "#FFC72C",
+    "onPrimary": "#FFC72C"
+  },
+  "dark": {
+    "base": "#1A1A1A",
+    "panel": "#222222",
+    "text": "#CCCCCC",
+    "grid": "#1C1C1E",
+    "primary": "#DA291C",
+    "secondary": "#FBF6E0",
+    "accent": "#FFC72C",
+    "onPrimary": "#FFC72C"
+  },
+  "type": {
+    "display": "Montserrat",
+    "body": "Montserrat",
+    "numeric": "Rubik",
+    "weights": {
+      "light": 300,
+      "regular": 400,
+      "semibold": 600
+    }
+  },
+  "shadows": {
+    "deep-emboss": {
+      "x": -5,
+      "y": -5,
+      "blur": 10,
+      "opacity": 0.08,
+      "color": "text"
+    },
+    "soft-push": {
+      "x": -10,
+      "y": -10,
+      "blur": 20,
+      "opacity": 0.1,
+      "color": "text"
+    },
+    "accent-highlight": {
+      "x": 5,
+      "y": 5,
+      "blur": 10,
+      "opacity": 0.8,
+      "color": "accent"
+    },
+    "accent-glow": {
+      "x": 0,
+      "y": 0,
+      "blur": 24,
+      "opacity": 0.6,
+      "color": "accent",
+      "use": "celebration only — never a resting control"
+    },
+    "brand-cta": {
+      "fill": "primary",
+      "label": "onPrimary",
+      "bevel": "inset 0 1px 0 rgba(255,255,255,.20)",
+      "shade": "inset 0 -1px 0 rgba(0,0,0,.12)",
+      "drop": "0 4px 8px rgba(0,0,0,.15)"
+    },
+    "brand-cta-pressed": {
+      "extends": "brand-cta",
+      "drop": "deep-emboss",
+      "translateY": 1
+    },
+    "brand-cta-selected": {
+      "extends": "brand-cta",
+      "ring": "2px accent",
+      "fillDarken": 0.08
+    }
+  },
+  "watermark": {
+    "alpha": 0.08,
+    "tile": 96
+  },
+  "_tenant": "The four tenant colours per theme and the type block are copied from references/brand-sheets/<tenant>.tokens.json by tier-a/init.sh (jq merge). Never null. The sheet also carries logo + watermark asset ids; those are NOT merged here â they live in tier-a/TENANT.json and are seeded into tier-a/ASSET_SET.json.required by init.sh.",
+  "link": "https://www.mcdonalds.com"
+}

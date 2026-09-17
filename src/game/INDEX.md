@@ -15,7 +15,7 @@ src/game/
   setup/           # Game tracking hook, analytics trackers, flag config
   tuning/          # Game tuning types + defaults
 
-  mygame/          # Your game (Pixi engine, controllers, etc.)
+  match-pile/      # The game (ECS, board, rules, generator, solver, screens)
 ```
 
 ## Infrastructure
@@ -51,27 +51,30 @@ src/game/
 | GameAudioManager (extends BaseAudioManager) | audio/manager.ts |
 | Sound effect catalog | audio/sounds.ts |
 
-## Game Logic (mygame/)
+## Game Logic (match-pile/)
 
 | Intent | Path |
 |--------|------|
-| Game controller (Pixi ↔ GameScreen bridge) | mygame/screens/gameController.ts |
-| Start view (Pixi ↔ StartScreen bridge) | mygame/screens/startView.ts |
-| Game engine classes | mygame/core/ |
-| Animations | mygame/animations/ |
-| Controllers | mygame/controllers/ |
-| Systems | mygame/systems/ |
-| UI components | mygame/ui/ |
-| Static data | mygame/data/ |
-| Types | mygame/types/ |
-| Utilities | mygame/utils/ |
-| Services | mygame/services/ |
+| Game controller (Pixi ↔ GameScreen bridge) | match-pile/screens/gameController.ts |
+| Start view (Pixi ↔ StartScreen bridge) | match-pile/screens/startView.ts |
+| ECS plugin, transactions, agent surface | match-pile/ecs/ |
+| Pure rules engine (match/exposure/win-fail/scoring) | match-pile/rules/ |
+| Level generator + difficulty curve | match-pile/generator/ |
+| Solver (hint, solvability, replay) | match-pile/solver/ |
+| Board rendering (layout, tiles, tray, chrome, hud) | match-pile/board/ |
+| FTUE tutorial steps + emphasis | match-pile/tutorial/ |
+| Celebration/feedback fx | match-pile/fx/ |
+| Sound catalog | match-pile/audio/ |
+| Level/content services | match-pile/services/ |
+| Static + generated level data | match-pile/data/ |
+| Brand tokens, palette, typography | match-pile/brand.tokens.json, palette.ts, typography.ts |
 
 ## Where to put new files
 
-- Game engine class (Pixi container, entity) → `mygame/core/`
-- Game controller / orchestration → `mygame/controllers/`
-- Game-specific Pixi UI → `mygame/ui/`
+- New ECS transaction / resource → `match-pile/ecs/`
+- New rule or scoring change → `match-pile/rules/`
+- New board visual / renderer → `match-pile/board/`
+- New generator or solver behavior → `match-pile/generator/`, `match-pile/solver/`
 - Game state signals → `state.ts`
 - Game tuning values → `tuning/`
 - New Solid.js screen → `screens/`
@@ -93,16 +96,16 @@ The bundle name prefix determines which loader handles the assets:
 
 For single-asset bundles, the **bundle name IS the Pixi alias**:
 ```
-{ name: 'scene-tiles', assets: ['atlas-tiles-mygame.json'] }
+{ name: 'scene-tiles', assets: ['atlas-tiles-match-pile.json'] }
 → gpuLoader.createSprite('scene-tiles', 'bg-gameboard.png')
 ```
 
-## Forking Checklist
+## Forking Checklist (completed for this project)
 
 1. `config.ts` — change identity (GAME_ID, GAME_SLUG, GAME_NAME), environment URLs, manifest bundles
 2. `state.ts` — define your state shape
 3. `tuning/` — set your tuning defaults
 4. `setup/` — configure analytics, feature flags
 5. `screens/` — customize screen shells
-6. `audio/` — define your sounds
-7. Rename `mygame/` to your game name, build your game there
+6. `audio/` — define your sounds (see `match-pile/audio/sounds.ts`)
+7. Game lives in `match-pile/` (the template's original starter game folder has been removed)

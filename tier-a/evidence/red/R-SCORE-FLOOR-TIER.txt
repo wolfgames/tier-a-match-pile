@@ -1,0 +1,13 @@
+Rule: R-SCORE-FLOOR-TIER
+Test: it("R-SCORE-RANKING-MEDIAN / R-SCORE-FIRST-ATTEMPT / R-SCORE-FLOOR-TIER (red) — a per-Level ranking module exists with a DEFAULT_MEDIAN fallback", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output: same as R-SCORE-RANKING-MEDIAN.txt (shared test).
+
+Root cause: no rank-tier logic exists at all (the current Results screen
+shows raw score + 0-3 stars only, no tier/percentile). Confirms the Tier 0
+floor rank (docs/scoring-system.md#rank-tiers-percentile-standing) is
+unimplemented.

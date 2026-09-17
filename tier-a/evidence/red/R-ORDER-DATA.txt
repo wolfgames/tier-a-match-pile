@@ -1,0 +1,15 @@
+Rule: R-ORDER-DATA
+Test: it("R-ORDER-DATA — an orders module exposes a data shape with itemTypeId/requiredQty/progress", ...)
+File: tests/unit/game/orders.test.ts
+
+Command: bunx vitest run tests/unit/game/orders.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/orders.test.ts > Orders system (red phase — unimplemented) > R-ORDER-DATA
+AssertionError: rules/orders module does not exist yet: expected null not to be null
+
+Root cause: `~/game/match-pile/rules/orders` does not exist. There is no
+production module defining the Order data shape (itemTypeId/requiredQty/
+progress) described in docs/GAME-DESIGN.md#orders.

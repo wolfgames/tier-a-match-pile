@@ -1,0 +1,13 @@
+Rule: R-SCORE-STREAK-RESET
+Test: it("R-SCORE-EVENT / R-SCORE-STREAK / R-SCORE-STREAK-RESET / R-SCORE-ACCURACY (red) — a per-triple-match scoring module exists", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output: same as R-SCORE-EVENT.txt (shared test).
+
+Root cause: no streak-reset logic exists, so there is nothing yet to confirm
+distinguishes a rules-rejected wrong attempt (resets streak) from a valid
+partial pick / distractor pick / UI action (does not reset streak) per
+docs/scoring-system.md#match-pile-event-semantics.

@@ -1,0 +1,16 @@
+Rule: R-SCORE-RANKING-MEDIAN
+Test: it("R-SCORE-RANKING-MEDIAN / R-SCORE-FIRST-ATTEMPT / R-SCORE-FLOOR-TIER (red) — a per-Level ranking module exists with a DEFAULT_MEDIAN fallback", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-RANKING-MEDIAN / R-SCORE-FIRST-ATTEMPT / R-SCORE-FLOOR-TIER
+AssertionError: scoring/ranking module does not exist yet: expected null not to be null
+
+Root cause: `~/game/match-pile/scoring/ranking` does not exist. No per-Level
+median or DEFAULT_MEDIAN fallback exists anywhere. Confirms
+docs/scoring-system.md#ranking--recognition--the-median-normalized-model is
+unimplemented.

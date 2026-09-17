@@ -1,0 +1,31 @@
+Rule: R-TRAY-SIZE
+Test: it('R-TRAY-SIZE — TRAY_SIZE constant is 7', ...)
+File: tests/unit/game/rules.test.ts
+
+Command: bunx vitest run tests/unit/game/rules.test.ts
+Exit code: 1
+
+The whole test file fails to load before any individual `it` block can run,
+because it imports the not-yet-created production barrels
+(`~/game/match-pile/rules`, `~/game/match-pile/generator`,
+`~/game/match-pile/solver`). This is the expected red-phase failure shared
+by every rule id in this file — same root cause, one evidence file per id
+per the test-author brief.
+
+Failure output (first ~15 lines):
+
+ RUN  v2.1.9 C:/Wolf Games/tier-a-match-pile
+
+ ❯ tests/unit/game/rules.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/game/rules.test.ts [ tests/unit/game/rules.test.ts ]
+Error: Cannot find module '~/game/match-pile/rules' imported from 'C:/Wolf Games/tier-a-match-pile/tests/unit/game/rules.test.ts'.
+
+- If you rely on tsconfig.json's "paths" to resolve modules, please install "vite-tsconfig-paths" plugin to handle module resolution.
+- Make sure you don't have relative aliases in your Vitest config. Use absolute paths instead. Read more: https://vitest.dev/guide/common-errors
+ ❯ tests/unit/game/rules.test.ts:5:31
+      3|  *
+      4|  * Tests each rule id in tier-a/REFERENCE_MATRIX.json against:
+      5|  *  - `reference.ts` (the test author's independent oracle, importable…

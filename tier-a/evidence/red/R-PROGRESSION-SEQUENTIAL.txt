@@ -1,0 +1,14 @@
+Rule: R-PROGRESSION-SEQUENTIAL
+Test: it("R-PROGRESSION-SEQUENTIAL (already green — locked-in regression guard) — seedFor() is a pure function of level index only, no calendar/date input", ...)
+File: tests/unit/game/progression.test.ts
+
+Command: bunx vitest run tests/unit/game/progression.test.ts
+Exit code: 0 for this test (PASS)
+
+Status: GREEN, not red. services/levels.ts#seedFor(levelIndex) takes exactly
+one parameter and derives its result purely from the level index — no
+Date.now() or other calendar input exists anywhere in level selection or
+generation. "Daily Edition" was audited earlier this session and confirmed to
+already have zero date-seeding code. Recorded here as a locked-in regression
+guard against a future agent accidentally adding calendar seeding
+(docs/GAME-DESIGN.md#current-prototype-scope--daily-edition--levels).

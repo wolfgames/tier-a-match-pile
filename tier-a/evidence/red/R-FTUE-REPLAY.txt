@@ -1,0 +1,16 @@
+Rule: R-FTUE-REPLAY
+Test: it("a How-to-Play entry point exists and does not touch campaign/level progression", ...) under describe("R-FTUE-REPLAY (red) ...")
+File: tests/unit/tier-a/ftue.test.ts
+
+Command: bunx vitest run tests/unit/tier-a/ftue.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/tier-a/ftue.test.ts > R-FTUE-REPLAY (red) — How-to-Play replays FTUE in an isolated, unscored context > a How-to-Play entry point exists and does not touch campaign/level progression
+AssertionError: tutorial/howToPlay (or equivalent replay entry point) does not exist yet: expected null not to be null
+
+Root cause: no How-to-Play module exists. This also matches the earlier
+compliance audit finding that board/chrome.ts's icon-settings/icon-profile
+are unwired stubs with no menu behind them. Confirms How-to-Play
+(docs/GAME-DESIGN.md#how-to-play) is unimplemented.

@@ -1,0 +1,16 @@
+Rule: R-DIFFICULTY-AXES (supersedes MODE-DIFFICULTY-LADDER's axes)
+Test: it("R-DIFFICULTY-AXES (red) — each tier config carries a time-budget axis alongside density", ...)
+File: tests/unit/game/progression.test.ts
+
+Command: bunx vitest run tests/unit/game/progression.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/progression.test.ts > Progression / difficulty (mixed red/green — see file header) > R-DIFFICULTY-AXES
+AssertionError: tier config should carry a timeBudgetMs-shaped field
+
+Root cause: TIER_CONFIG entries carry minTiles/maxTiles/minTypes/maxTypes/cols/
+rows (density + grid axes only) — no time-budget field exists, so "available
+time decreases" (docs/GAME-DESIGN.md#progression-and-retention) has nothing
+to attach to yet.

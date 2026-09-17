@@ -1,0 +1,16 @@
+Rule: R-RELIEF-LEVEL
+Test: it("R-RELIEF-LEVEL (red) — a level-sequence helper enforces Easy-after-Hard/Very-Hard", ...)
+File: tests/unit/game/progression.test.ts
+
+Command: bunx vitest run tests/unit/game/progression.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/progression.test.ts > Progression / difficulty (mixed red/green — see file header) > R-RELIEF-LEVEL
+AssertionError: services/levelSequence (or equivalent relief-level logic) does not exist yet: expected null not to be null
+
+Root cause: services/levels.ts#tierBeyondPack cycles a fixed easy→medium→hard
+repeat with no relief-level rule at all. Confirms the mandatory
+Easy-after-Hard/Very-Hard rule (docs/GAME-DESIGN.md#progression-and-retention)
+is unimplemented.

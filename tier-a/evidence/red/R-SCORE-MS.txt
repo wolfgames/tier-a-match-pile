@@ -1,0 +1,16 @@
+Rule: R-SCORE-MS
+Test: it("R-SCORE-MS (red) — cycle time between successful triple matches is tracked in milliseconds, not coarser units", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-MS
+AssertionError: cannot verify ms-precision cycle time — the module does not exist yet: expected null not to be null
+
+Root cause: no per-triple-match cycle-time tracking module exists yet
+(scoring.ts only takes a single aggregate solveMs for the whole run, not a
+per-success cycle time). Confirms docs/scoring-system.md#2-time-efficiency-points-continuous-milliseconds
+is unimplemented.

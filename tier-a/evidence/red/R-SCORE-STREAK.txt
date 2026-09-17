@@ -1,0 +1,14 @@
+Rule: R-SCORE-STREAK
+Test: it("R-SCORE-EVENT / R-SCORE-STREAK / R-SCORE-STREAK-RESET / R-SCORE-ACCURACY (red) — a per-triple-match scoring module exists", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output: same as R-SCORE-EVENT.txt (shared test — the missing
+`scoring/templateScoring` module is the single root cause blocking event,
+streak, streak-reset, and accuracy coverage together).
+
+Root cause: no speed-streak tracking exists anywhere in the codebase.
+Confirms docs/scoring-system.md#3-speed-streak-multiplier-time-efficiency-only
+is unimplemented.

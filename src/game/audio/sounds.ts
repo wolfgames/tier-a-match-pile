@@ -1,8 +1,12 @@
 /**
- * Sound Catalog — Template
+ * Sound Catalog — Template starter (unused)
  *
- * Define your game's sound effects and music here.
- * Each SoundDefinition maps to a Howler sprite channel + sprite name.
+ * This scaffold pair (audio/manager.ts + audio/sounds.ts) has no current
+ * importer — match-pile defines its own catalog at
+ * `src/game/match-pile/audio/sounds.ts` and dispatches feedback via
+ * `feedbackRegistry`/`feel.ts` instead. Left in place as the generic
+ * GameAudioManager starting point for a future game; update or remove
+ * alongside it.
  *
  * Bundle naming convention:
  *   audio-sfx-<game>  → sound effects
@@ -15,10 +19,10 @@ import type { SoundDefinition } from '~/core/systems/audio';
 
 export type { SoundDefinition };
 
-// Example: const SFX = 'audio-sfx-mygame';
+// Example: const SFX = 'audio-sfx-<game>';
 
 export const SOUND_BUTTON_CLICK: SoundDefinition = {
-  channel: 'audio-sfx-mygame',
+  channel: 'audio-sfx-template',
   sprite: 'button_click',
   volume: 0.7,
 };

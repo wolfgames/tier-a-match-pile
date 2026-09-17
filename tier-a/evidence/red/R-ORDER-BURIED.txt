@@ -1,0 +1,16 @@
+Rule: R-ORDER-BURIED
+Test: it("R-ORDER-BURIED — the generator can place an Order-relevant tile at a non-zero (covered) layer", ...)
+File: tests/unit/game/orders.test.ts
+
+Command: bunx vitest run tests/unit/game/orders.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/orders.test.ts > Orders system (red phase — unimplemented) > R-ORDER-BURIED
+AssertionError: generator Order-aware placement does not exist yet: expected undefined to be defined
+
+Root cause: the generator (generator/generate.ts, generator/objectTypes.ts)
+has no concept of which placed types are "Order-relevant" vs distractor, so
+there is nothing yet guaranteeing (or even representing) that Order items may
+be buried under other objects (docs/GAME-DESIGN.md#orders).

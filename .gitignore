@@ -72,3 +72,9 @@ docs/cortex-inventory.md
 # Cache
 .cache
 .eslintcache
+
+# Stryker mutation-testing scratch sandbox (tier-a/reports/mutation.json is the kept artifact)
+.stryker-tmp/
+
+# tier-a phase transcripts stay local (gate Q3 reads them from disk)
+tier-a/run-*/transcripts/

@@ -1,0 +1,15 @@
+Rule: R-DIFFICULTY-BANDS (supersedes MODE-DIFFICULTY-LADDER's 3-tier taxonomy)
+Test: it("R-DIFFICULTY-BANDS (red) — difficulty bands include Easy, Medium, Hard, and Very Hard", ...)
+File: tests/unit/game/progression.test.ts
+
+Command: bunx vitest run tests/unit/game/progression.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/progression.test.ts > Progression / difficulty (mixed red/green — see file header) > R-DIFFICULTY-BANDS
+AssertionError: expected [ 'easy', 'medium', 'hard' ] to contain 'veryHard'
+
+Root cause: generator/objectTypes.ts#TIER_CONFIG only defines easy/medium/hard
+— there is no "veryHard" band. Confirms the Easy/Medium/Hard/Very-Hard
+taxonomy (docs/GAME-DESIGN.md#progression-and-retention) is unimplemented.

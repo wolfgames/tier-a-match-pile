@@ -1,7 +1,7 @@
 {
   "$comment": "Game identity + environment for wolf-dev tooling. gameSlug (formerly projectId) must equal the game's Nucleo gameSlug. assetsDir opts into CDN-first assets (wolf-dev assets publish/verify).",
-  "gameSlug": "mygame",
-  "gameName": "My Game",
+  "gameSlug": "match-pile",
+  "gameName": "Match Pile",
   "environment": "Production",
   "assetsDir": "assets"
 }

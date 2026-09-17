@@ -29,12 +29,20 @@ export interface DialogueMessage {
 }
 
 /**
- * Game data fetched from server / injected by host.
- * Replace with your game's actual data shape.
+ * Game data fetched from server / injected by host — the dynamic level pack
+ * (services/levels.ts is the only reader; see docs/guides/state-architecture.md).
  */
 export interface GameData {
-  uid: string;
-  name: string;
+  schemaId: string;
+  version: number;
+  levels: Array<{
+    id: string;
+    seed: number;
+    puzzle: unknown;
+    solution: readonly string[];
+    tier: 'easy' | 'medium' | 'hard';
+    difficultyScore: number;
+  }>;
 }
 // ============================================================================
 // SCREEN WIRING

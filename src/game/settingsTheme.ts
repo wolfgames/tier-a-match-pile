@@ -3,9 +3,9 @@
  *
  * Deliberately empty: the catalog's default IS the Wolf house settings bar, so
  * a fresh template already looks like a game with nothing configured. Put
- * tokens here and both menus follow — the in-canvas one
- * (`mygame/screens/settingsOverlay.ts`) and the DOM one
- * (`screens/components/GameSettingsMenu.tsx`).
+ * tokens here and any consuming menu follows — currently only the DOM one
+ * (`screens/components/GameSettingsMenu.tsx`); match-pile has no in-canvas
+ * settings overlay.
  *
  * ```ts
  * export const SETTINGS_THEME = {

@@ -1,0 +1,16 @@
+Rule: R-SCORE-TUNABLES
+Test: it("R-SCORE-TUNABLES (red) — scoring constants live in a config/data module, not as hardcoded exported constants", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/scoring-contract.test.ts > Scoring contract (mixed red/green) > R-SCORE-TUNABLES
+AssertionError: scoring/config (data/config tunables per docs/scoring-system.md) does not exist yet — current scoring.ts hardcodes BUDGET/MOVE_COST/HINT_COST/STAR_PAR/STAR_ACE as exported constants: expected null not to be null
+
+Root cause: `~/game/match-pile/scoring/config` does not exist; the current
+scoring constants are hardcoded exported `const`s in scoring.ts itself, not a
+data/config module. Confirms docs/scoring-system.md's "all tunables in
+config/data" requirement is unimplemented.

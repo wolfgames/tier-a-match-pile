@@ -1,0 +1,15 @@
+Rule: R-ORDER-QTY-MULTIPLE3
+Test: it("R-ORDER-QTY-MULTIPLE3 — a validator rejects an Order whose requiredQty is not a multiple of 3", ...)
+File: tests/unit/game/orders.test.ts
+
+Command: bunx vitest run tests/unit/game/orders.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/orders.test.ts > Orders system (red phase — unimplemented) > R-ORDER-QTY-MULTIPLE3
+AssertionError: rules/orders module (and its Order validator) does not exist yet: expected null not to be null
+
+Root cause: no Order validator exists anywhere in the codebase yet, so the
+multiple-of-3 requiredQty constraint (docs/GAME-DESIGN.md#orders) cannot be
+enforced.

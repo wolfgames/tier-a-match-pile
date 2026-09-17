@@ -1,0 +1,13 @@
+Rule: R-SCORE-FIRST-ATTEMPT
+Test: it("R-SCORE-RANKING-MEDIAN / R-SCORE-FIRST-ATTEMPT / R-SCORE-FLOOR-TIER (red) — a per-Level ranking module exists with a DEFAULT_MEDIAN fallback", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output: same as R-SCORE-RANKING-MEDIAN.txt (shared test).
+
+Root cause: no ranking/median module exists, so there is nothing yet to
+exclude retries/How-to-Play replays from median benchmarking. Confirms
+docs/scoring-system.md's first-attempt-only benchmarking rule is
+unimplemented.

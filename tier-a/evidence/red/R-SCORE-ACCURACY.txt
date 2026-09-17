@@ -1,0 +1,15 @@
+Rule: R-SCORE-ACCURACY
+Test: it("R-SCORE-EVENT / R-SCORE-STREAK / R-SCORE-STREAK-RESET / R-SCORE-ACCURACY (red) — a per-triple-match scoring module exists", ...)
+File: tests/unit/game/scoring-contract.test.ts
+
+Command: bunx vitest run tests/unit/game/scoring-contract.test.ts
+Exit code: 1
+
+Failure output: same as R-SCORE-EVENT.txt (shared test).
+
+Root cause: no accuracy-multiplier implementation exists. The only prior
+accuracy-shaped concept in this codebase was the now-superseded end-of-run
+unmatched-item tally documented in an earlier revision of
+docs/GAME-DESIGN.md — that was never implemented in code either. Confirms
+docs/scoring-system.md#4-accuracy-multiplier-continuous-run-end is
+unimplemented.

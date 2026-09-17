@@ -70,13 +70,14 @@ export const manifest: Manifest = {
       assets: [{ alias: 'core-settings', src: 'atlas-settings-ui.json' }],
     },
 
-    // ── Bubble shooter (GPU) ────────────────────────────────────────────────
-    // ART TODO: the bubble shooter currently renders with placeholder Pixi
-    // Graphics (tinted circles) — no GPU bundles yet. When bubble sprites are
-    // generated (one alias per colour index, see COLORS in mygame/bubble/
-    // config.ts), add a `scene-bubbles` bundle here and load it in the
-    // controller. See the asset-pipeline rule.
-
+    // ── Match Pile (GPU) ────────────────────────────────────────────────────
+    // ART TODO (tier-a Phase 2): the board currently renders with placeholder
+    // colour-coded Pixi Graphics discs — no GPU bundles yet. Once the object-pool
+    // tile art, celebration fx, and audio are generated and published (see
+    // tier-a/ASSET_SET.json + tier-a-assets-v4), add the real `scene-*`/`fx-*`/
+    // `audio-*` bundles here and load them in the controller. See the
+    // asset-pipeline rule.
+    //
     // When adding bundles for your game, use the appropriate prefix:
     //
     //   scene-*  → GPU spritesheets, backgrounds, tiles
@@ -87,9 +88,9 @@ export const manifest: Manifest = {
     //   boot-*   → DOM pre-engine splash assets
     //
     // Examples (GPU atlas JSON keeps its json-data/ prefix; audio JSON is top-level):
-    //   { name: 'scene-tiles-mygame', assets: [{ alias: 'scene-tiles-mygame', src: 'json-data/atlas-tiles-mygame.json' }] },
+    //   { name: 'scene-tiles-match-pile', assets: [{ alias: 'scene-tiles-match-pile', src: 'json-data/atlas-tiles-match-pile.json' }] },
     //   { name: 'fx-blast', assets: [{ alias: 'fx-blast', src: 'json-data/vfx-blast.json' }] },
-    //   { name: 'audio-sfx-mygame', assets: [{ alias: 'audio-sfx-mygame', src: 'sfx-mygame.json' }] },
-    //   { name: 'audio-music-mygame', assets: [{ alias: 'audio-music-mygame', src: 'music-mygame.json' }] },
+    //   { name: 'audio-sfx-match-pile', assets: [{ alias: 'audio-sfx-match-pile', src: 'sfx-match-pile.json' }] },
+    //   { name: 'audio-music-match-pile', assets: [{ alias: 'audio-music-match-pile', src: 'music-match-pile.json' }] },
   ],
 };

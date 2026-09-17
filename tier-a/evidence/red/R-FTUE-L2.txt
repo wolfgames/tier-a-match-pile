@@ -1,0 +1,16 @@
+Rule: R-FTUE-L2
+Test: it("the single instruction targets the timer slot and is Continue-gated", ...) under describe("R-FTUE-L2 (red) ...")
+File: tests/unit/tier-a/ftue.test.ts
+
+Command: bunx vitest run tests/unit/tier-a/ftue.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/tier-a/ftue.test.ts > R-FTUE-L2 (red) — Level 2 highlights the Timer behind a Continue gate > the single instruction targets the timer slot and is Continue-gated
+AssertionError: targets the timer HUD element: expected 'tile-t9' to match /timer/i
+
+Root cause: tutorial/steps.ts#stepsFor(2) still targets a tile (the pre-Orders
+"tap 3 identical" grammar), not the Timer HUD element — there is no Timer to
+target yet (R-TIMER-BUDGET), and no Continue/timer-paused metadata on the
+step. Confirms Level 2 (docs/GAME-DESIGN.md#level-2--timer) is unimplemented.

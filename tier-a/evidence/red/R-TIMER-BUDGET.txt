@@ -1,0 +1,15 @@
+Rule: R-TIMER-BUDGET (supersedes R-NO-TIMER — see tier-a/REFERENCE_MATRIX.json)
+Test: it("R-TIMER-BUDGET — a tickTimer transaction exists and tracks a millisecond-precision budget/remaining pair", ...)
+File: tests/unit/game/timer.test.ts
+
+Command: bunx vitest run tests/unit/game/timer.test.ts
+Exit code: 1
+
+Failure output:
+
+ FAIL  tests/unit/game/timer.test.ts > Timer system (red phase — unimplemented) > R-TIMER-BUDGET
+AssertionError: ecs/transactions/tickTimer does not exist yet: expected null not to be null
+
+Root cause: no Timer resource or transaction exists anywhere in
+src/game/match-pile/ecs/. Confirms the countdown Timer (docs/GAME-DESIGN.md#timer)
+is unimplemented.

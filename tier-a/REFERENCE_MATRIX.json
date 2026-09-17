@@ -1,0 +1,416 @@
+{
+  "game": "Match Pile",
+  "slug": "match-pile",
+  "genreReference": "Match Factory! (Peak Games, Google Play, 10M+ downloads, top-grossing Puzzle) and the triple-match tile-pile genre it defines",
+  "canonicalAncestor": "Mahjong Solitaire / Shanghai (Brodie Lockard, 1981; Activision Shanghai, 1986) — layered-tile occlusion + matched-group removal, modernized by the genre into a freeform pile + bounded tray fail-state",
+  "sourceOfTruth": {
+    "note": "As of the Orders/Timer core-loop revision, docs/GAME-DESIGN.md governs gameplay/product behavior and docs/scoring-system.md governs scoring/ranking/mastery. This matrix is updated to match; where an entry below conflicts with either doc, the doc wins and the entry must be corrected here.",
+    "gameplayDoc": "docs/GAME-DESIGN.md",
+    "scoringDoc": "docs/scoring-system.md"
+  },
+  "rules": [
+    {
+      "id": "R-MATCH-SIZE",
+      "status": "kept",
+      "kind": "canonical",
+      "decision": "A group clears when exactly 3 identical object types are simultaneously present in the Slots Row (tray). No pairs, no 4+ groups in the base game.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#matches",
+      "test": "tests/unit/game/rules.test.ts#R-MATCH-SIZE"
+    },
+    {
+      "id": "R-TRAY-SIZE",
+      "status": "updated",
+      "kind": "canonical",
+      "decision": "The Slots Row (tray) holds at most 7 objects at once (TRAY_SIZE = 7). \"Slots Row\" is the player-facing name for the same mechanic previously called \"tray\" — no numeric or structural change.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#slots-row",
+      "test": "tests/unit/game/rules.test.ts#R-TRAY-SIZE"
+    },
+    {
+      "id": "R-EXPOSURE",
+      "status": "kept",
+      "kind": "canonical",
+      "decision": "Objects occupy a cell on a coarse (col,row) grid, stacked in layers at that cell. An object is selectable iff no other remaining object sits at the same cell with a strictly higher layer (i.e. it is the topmost remaining object at its cell). Unaffected by Orders/Timer.",
+      "sourceType": "assumed",
+      "reference": "docs/GAME-DESIGN.md#playable-area",
+      "test": "tests/unit/game/rules.test.ts#R-EXPOSURE"
+    },
+    {
+      "id": "R-AUTOCLEAR",
+      "status": "updated",
+      "kind": "canonical",
+      "decision": "A matching triple in the Slots Row clears immediately and automatically the instant the 3rd copy is inserted — no manual 'confirm match' input. This applies identically whether the cleared type is Order-relevant or a pure distractor (see R-DISTRACTOR-VALID) — auto-clear itself has no concept of Orders.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#matches",
+      "test": "tests/unit/game/rules.test.ts#R-AUTOCLEAR"
+    },
+    {
+      "id": "R-FAIL",
+      "status": "updated",
+      "kind": "canonical",
+      "decision": "FAIL is reached iff, immediately after a pick is resolved (insert + any auto-clear), the Slots Row holds TRAY_SIZE (7) objects with no completable triple among them. This is one of two independent loss conditions (the other is R-TIMER-FAIL) — neither supersedes the other; both remain active simultaneously. No longer coupled to the old pile-empty win check (see R-ORDERS-WIN).",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#timer",
+      "test": "tests/unit/game/rules.test.ts#R-FAIL"
+    },
+    {
+      "id": "R-WIN",
+      "status": "superseded",
+      "supersededBy": "R-ORDERS-WIN",
+      "kind": "canonical",
+      "decision": "[SUPERSEDED — kept for history only, no longer authoritative] WIN is reached iff the pile has zero remaining objects (fully cleared), regardless of tray occupancy at that moment.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#core-loop — \"Emptying the pile is not required for victory.\"",
+      "test": "tests/unit/game/rules.test.ts#R-ORDERS-WIN (rewritten in place; see supersession note in the test file)"
+    },
+    {
+      "id": "R-TERMINAL",
+      "status": "kept",
+      "kind": "canonical",
+      "decision": "Once phase is 'won' or 'lost', step() is absorbing: applying any further pick returns the identical state unchanged. Restart/next-level is an ECS-layer concern, not a rules.step() transition. Now must also absorb a Timer-triggered loss, not only tray-overflow or Orders-complete.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#core-loop",
+      "test": "tests/unit/game/rules.test.ts#R-TERMINAL"
+    },
+    {
+      "id": "R-NO-TIMER",
+      "status": "superseded",
+      "supersededBy": "R-TIMER-BUDGET, R-TIMER-FAIL, R-TIMER-PAUSE",
+      "kind": "mode",
+      "decision": "[SUPERSEDED — kept for history only, no longer authoritative] Base mode has no countdown timer; the run is paced entirely by tray capacity, not a clock.",
+      "sourceType": "reversed",
+      "reference": "docs/GAME-DESIGN.md#timer — a countdown Timer is now a required core system",
+      "test": "tests/unit/game/rules.test.ts (superseded assertion rewritten in place); tests/unit/game/timer.test.ts"
+    },
+    {
+      "id": "R-HINT",
+      "status": "updated",
+      "kind": "canonical",
+      "decision": "One hint per level. Hint searches from the current state for any exposed object that lies on some continuation that still leads to all Orders being satisfiable, and reveals it in place; returns null if no such continuation remains. \"Winnable\" is now defined against Orders-completion, not full-pile clearability — the underlying solver/search must be extended accordingly (implementation deferred; not part of this documentation/RED-test pass).",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "tests/unit/game/rules.test.ts#R-HINT (existing test still exercises the pre-Orders solver path; needs extension once solver is Orders-aware)"
+    },
+    {
+      "id": "R-GEN-SOLVABLE",
+      "status": "updated",
+      "kind": "engine",
+      "decision": "Every generated puzzle is solvable by construction, extended to guarantee reachability of every configured Order's required quantity specifically (not merely full-pile clearability). The generator still builds the pile backward from an empty grid via reverse-construction; Order-relevant triples must be included among the constructed clear order.",
+      "sourceType": "engine",
+      "reference": "docs/GAME-DESIGN.md#orders, #progression-and-retention",
+      "test": "tests/unit/game/rules.test.ts#R-GEN-SOLVABLE (pre-Orders coverage still valid); tests/unit/game/orders.test.ts (Order-reachability, red)"
+    },
+    {
+      "id": "R-GEN-DETERMINISTIC",
+      "status": "kept",
+      "kind": "convention",
+      "decision": "generate({seed, tier}) is a pure function of its inputs: same seed + tier always produces the identical puzzle. Uses an internal LCG-style seeded PRNG; Math.random is never called anywhere in rules/solver/generator. Unaffected by Orders/Timer/progression changes.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#current-prototype-scope — sequential, seeded generation, no calendar seeding",
+      "test": "tests/unit/game/rules.test.ts#R-GEN-DETERMINISTIC"
+    },
+
+    {
+      "id": "R-ORDERS-WIN",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "A level is WON iff every configured Order's progress has reached its requiredQty. The pile is not required to be empty — non-Order tiles may remain. Supersedes R-WIN.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#core-loop, #orders",
+      "test": "tests/unit/game/orders.test.ts#R-ORDERS-WIN"
+    },
+    {
+      "id": "R-ORDER-DATA",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Orders are data-driven. Each Order record contains at minimum: item/type identity (itemTypeId), a required quantity (requiredQty), and a progress/remaining quantity.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "tests/unit/game/orders.test.ts#R-ORDER-DATA"
+    },
+    {
+      "id": "R-ORDER-PROGRESS",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Completing a triple match of an Order's item type advances that Order's progress by MATCH_SIZE (3). Progress never exceeds requiredQty.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "tests/unit/game/orders.test.ts#R-ORDER-PROGRESS"
+    },
+    {
+      "id": "R-ORDER-QTY-MULTIPLE3",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "An Order's requiredQty is always a multiple of MATCH_SIZE (3). No partial-triple Order fulfillment and no rounding logic exist or are needed.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "tests/unit/game/orders.test.ts#R-ORDER-QTY-MULTIPLE3"
+    },
+    {
+      "id": "R-ORDER-BURIED",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Order-relevant objects may be placed at any stack layer, including fully covered/buried under other objects; the generator does not guarantee Order items start exposed. Not every board object needs to be cleared to win.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "tests/unit/game/orders.test.ts#R-ORDER-BURIED"
+    },
+    {
+      "id": "R-DISTRACTOR-VALID",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "A completed triple whose type matches no Order is still a fully valid, successful match — it clears normally via the same auto-clear rule (R-AUTOCLEAR) and must never be treated as an error for scoring, accuracy, or any other purpose. Distractor and Order-relevant objects are visually identical on the board by design; Order Cards are the sole source of \"what's needed\" information.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#matches, #playable-area",
+      "test": "tests/unit/game/orders.test.ts#R-DISTRACTOR-VALID"
+    },
+
+    {
+      "id": "R-TIMER-BUDGET",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Each level has a countdown Timer budget, tracked at millisecond precision internally. Early levels start at 5:00 (300000ms) — tunable, not final.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#timer",
+      "test": "tests/unit/game/timer.test.ts#R-TIMER-BUDGET"
+    },
+    {
+      "id": "R-TIMER-FAIL",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Reaching 0ms remaining before all Orders are satisfied ends the level as LOST. This is one of two independent loss conditions (the other is R-FAIL / Slots Row overflow) — neither supersedes the other.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#timer",
+      "test": "tests/unit/game/timer.test.ts#R-TIMER-FAIL"
+    },
+    {
+      "id": "R-TIMER-PAUSE",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "The Timer does not advance during FTUE instruction states. It starts only at each level's explicitly defined gameplay-start point (i.e. after the player dismisses the relevant instruction via Continue).",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#timer, #ftue",
+      "test": "tests/unit/game/timer.test.ts#R-TIMER-PAUSE"
+    },
+
+    {
+      "id": "R-PROGRESSION-SEQUENTIAL",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Levels advance strictly sequentially (Level 1 → 2 → 3 → …). No calendar/date-based seed derivation exists anywhere in level selection or generation. \"Daily Edition\" is a player-facing display name only, not a date-seeded mode.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#current-prototype-scope--daily-edition--levels",
+      "test": "tests/unit/game/progression.test.ts#R-PROGRESSION-SEQUENTIAL"
+    },
+    {
+      "id": "R-DIFFICULTY-BANDS",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Difficulty bands are Easy, Medium, Hard, Very Hard. Supersedes the old 3-tier (easy/medium/hard) taxonomy in MODE-DIFFICULTY-LADDER.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#progression-and-retention",
+      "test": "tests/unit/game/progression.test.ts#R-DIFFICULTY-BANDS"
+    },
+    {
+      "id": "R-DIFFICULTY-AXES",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Per-level difficulty is driven by three axes: available time (decreases), board/object density (increases), and Orders count/quantity/type complexity (increases). Supersedes MODE-DIFFICULTY-LADDER's old axes (object count / distinct types / grid tightness). Exact numeric curve values are NOT decided by this rule — deferred to a separate tuning-approval step.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#progression-and-retention",
+      "test": "tests/unit/game/progression.test.ts#R-DIFFICULTY-AXES"
+    },
+    {
+      "id": "R-RELIEF-LEVEL",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Any level generated at Hard or Very Hard must be immediately followed by an Easy relief level before difficulty builds again.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#progression-and-retention",
+      "test": "tests/unit/game/progression.test.ts#R-RELIEF-LEVEL"
+    },
+
+    {
+      "id": "R-FTUE-L1",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Level 1 (Core Mechanics): Instruction 1 highlights 3 identical items and waits for input, Timer paused. Instruction 2 highlights the 3 Order Slots and shows Continue, Timer paused; after Continue, gameplay begins and the Timer starts. Level setup: only Order-required objects (no distractors), Timer = 5:00.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#level-1--core-mechanics",
+      "test": "tests/unit/tier-a/ftue.test.ts#R-FTUE-L1"
+    },
+    {
+      "id": "R-FTUE-L2",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Level 2 (Timer): instruction highlights the Timer and shows Continue, Timer paused; after Continue, gameplay begins and the Timer starts. Level setup: Timer = 5:00, introduces additional non-Order distractor objects.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#level-2--timer",
+      "test": "tests/unit/tier-a/ftue.test.ts#R-FTUE-L2"
+    },
+    {
+      "id": "R-FTUE-L3",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Level 3 (Slots Row): a controlled tutorial state demonstrates A|A|B in the Slots Row, then allows selecting another A; the three A's resolve as a match despite not being adjacent/in-order. After the scripted match, the leftover B is removed from the Slots Row, the tutorial state ends, normal gameplay begins, and the Timer starts.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#level-3--slots-row",
+      "test": "tests/unit/tier-a/ftue.test.ts#R-FTUE-L3"
+    },
+    {
+      "id": "R-FTUE-REPLAY",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "FTUE is replayable on demand via a How-to-Play entry point. The replay runs isolated and unscored and never resets the player's real campaign/level progression.",
+      "sourceType": "convention",
+      "reference": "docs/GAME-DESIGN.md#how-to-play",
+      "test": "tests/unit/tier-a/ftue.test.ts#R-FTUE-REPLAY"
+    },
+
+    {
+      "id": "R-SCORE-CONTINUOUS",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Scoring is continuous; coarse buckets are never the primary scoring signal. See docs/scoring-system.md — this matrix does not duplicate the formula.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#design-goals",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-CONTINUOUS"
+    },
+    {
+      "id": "R-SCORE-MS",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Time-efficiency is computed and stored at millisecond precision.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#2-time-efficiency-points-continuous-milliseconds",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-MS"
+    },
+    {
+      "id": "R-SCORE-EVENT",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "The success/time-efficiency event is a completed triple match — Order-relevant or distractor, both count equally.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#match-pile-event-semantics",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-EVENT"
+    },
+    {
+      "id": "R-SCORE-STREAK",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "A speed-streak multiplier applies to time-efficiency points only; it advances on consecutive successful triple matches.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#3-speed-streak-multiplier-time-efficiency-only",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-STREAK"
+    },
+    {
+      "id": "R-SCORE-STREAK-RESET",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "The streak resets to 0 only on a wrong gameplay attempt (a selection rejected by the rules); valid partial picks, distractor picks, distractor triples, and UI/neutral actions never reset it.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#match-pile-event-semantics",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-STREAK-RESET"
+    },
+    {
+      "id": "R-SCORE-ACCURACY",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Accuracy is a continuous, run-end multiplier computed from correct vs. wrong gameplay attempts: correct = an accepted, rules-legal selection; wrong = a rules-rejected selection attempt. Never solver-based, never an end-of-run unmatched-item tally (that earlier definition is superseded).",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#4-accuracy-multiplier-continuous-run-end",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-ACCURACY"
+    },
+    {
+      "id": "R-SCORE-NO-PENALTY",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "No direct point subtraction ever occurs for a mistake; errors affect score only via slower cycle time, a broken streak, and lower accuracy.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#design-goals",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-NO-PENALTY"
+    },
+    {
+      "id": "R-SCORE-DETERMINISTIC",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Scoring is computed only from seeded/injected state and timestamps supplied by the caller — no Math.random(), no in-function wall-clock reads.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#design-goals",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-DETERMINISTIC"
+    },
+    {
+      "id": "R-SCORE-RANKING-MEDIAN",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Ranking is normalized against a per-Level median score, never absolute cutoffs. Phase 1 uses a static per-Level median plus a DEFAULT_MEDIAN fallback (no live aggregation system yet).",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#ranking--recognition--the-median-normalized-model",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-RANKING-MEDIAN"
+    },
+    {
+      "id": "R-SCORE-FIRST-ATTEMPT",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Per-Level median benchmarking uses first-attempt runs only; retries and How-to-Play replays are excluded.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#ranking--recognition--the-median-normalized-model",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-FIRST-ATTEMPT"
+    },
+    {
+      "id": "R-SCORE-FLOOR-TIER",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Every finished run receives a rank tier, including a floor Tier 0 for runs below the lowest percentile cutoff. Tier 0 displays no percentile, but there is never a \"no rank\" state.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#rank-tiers-percentile-standing",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-FLOOR-TIER"
+    },
+    {
+      "id": "R-SCORE-MASTERY",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "Mastery is rated on a 0–5 star scale, mapped across the Level's par→ace score band. Supersedes the existing 0–3 scoring.ts/Results-screen implementation, which is known-stale and repaired later in the Scoring implementation pass.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#mastery-rating-05-stars",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-MASTERY"
+    },
+    {
+      "id": "R-SCORE-TUNABLES",
+      "status": "added",
+      "kind": "canonical",
+      "decision": "All scoring constants (time-efficiency curve, streak steps, accuracy parameters, pace band, medians, rank-tier multiples, mastery band) live in config/data, never as hardcoded implementation constants.",
+      "sourceType": "convention",
+      "reference": "docs/scoring-system.md#default-tunables-summary",
+      "test": "tests/unit/game/scoring-contract.test.ts#R-SCORE-TUNABLES"
+    }
+  ],
+  "conventions": [
+    {
+      "id": "MODE-DIFFICULTY-LADDER",
+      "status": "superseded",
+      "supersededBy": "R-DIFFICULTY-BANDS, R-DIFFICULTY-AXES, R-RELIEF-LEVEL",
+      "decision": "[SUPERSEDED — kept for history only] Difficulty scales via 3 axes: total object count (pile size), number of distinct object types concurrently in play, and grid size relative to object count. Tiers: easy 9-24 objects / 2-4 types / roomier grid; medium 27-54 objects / 4-7 types / moderate grid; hard 57-90 objects / 6-10 types / tighter grid. Shipped in three large same-tier pack blocks with no relief-level rule.",
+      "sourceType": "assumed",
+      "reference": "docs/GAME-DESIGN.md#progression-and-retention",
+      "test": "content/reports — tier histogram in CONTENT_REPORT.md (describes the superseded model; see stale-artifact note)"
+    },
+    {
+      "id": "UX-POWERUPS-DESCOPE",
+      "status": "kept",
+      "decision": "Shuffle, undo/'turn back', hammer (remove one), and +1 tray-slot boosters are genre-standard but explicitly out of scope for this build's core loop. Only the contract-required hint (U3/U4) ships. Unaffected by Orders/Timer — neither is a powerup, both are required core systems.",
+      "sourceType": "default",
+      "reference": "docs/GAME-DESIGN.md — 'keep the core loop extremely simple'",
+      "test": "n/a — scope decision, not a testable rule"
+    },
+    {
+      "id": "UX-OBJECT-POOL",
+      "status": "updated",
+      "decision": "24 semantic McDonald's object type ids form the content pool the generator draws from. Consumption model now extends: each level's placed objects split into Order-relevant types (drive at least one active Order) and distractor types (matchable but advance no Order) — see R-ORDER-DATA / R-DISTRACTOR-VALID. The pool itself and its opaque-string-id treatment are unchanged.",
+      "sourceType": "default",
+      "reference": "docs/GAME-DESIGN.md#orders",
+      "test": "content/scripts/generate.ts uses this pool; per-level Order/distractor split is new and not yet implemented"
+    }
+  ]
+}
