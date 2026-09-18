@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* Tier A tenant type (McDonald's brand sheet: Montserrat display/body, Rubik numeric). */
+/* Tier A tenant type (Wolf Games brand sheet: Montserrat display/body, Rubik numeric). */
 @import "@fontsource/montserrat";
 @import "@fontsource/rubik";
 /* Provides `.design-box-span`. Imported after Tailwind so it wins at equal

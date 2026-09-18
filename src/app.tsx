@@ -4,12 +4,13 @@ import {
   DevOnly,
   GameConfigProvider,
   useAnalyticsService,
+  useGameConfig,
   DesignBleed,
   GameShell,
   ViewportProvider,
   ViewportToggle,
 } from '@wolfgames/components/solid';
-import { onCleanup, onMount, type ParentComponent } from 'solid-js';
+import { createEffect, onCleanup, onMount, type ParentComponent } from 'solid-js';
 import {
   AssetProvider,
   CdnManifestProvider,
@@ -34,6 +35,7 @@ import { activeDb } from '~/core/systems/ecs/DbBridge';
 import { createExampleWorld } from '~/core/systems/ecs/ExamplePlugin';
 import '~/game/setup/flags'; // registers flag config at module load
 import { useAssetCoordinator } from '~/core/systems/assets';
+import { useAudio } from '~/core/systems/audio';
 import { EmbedHook } from '~/game/EmbedHook';
 import { GameSettingsMenu } from '~/game/screens/components/GameSettingsMenu';
 import { createLoadingTracker } from '~/game/setup/loading-tracker';
@@ -65,9 +67,32 @@ function LoadingTrackerBridge() {
   return null;
 }
 
+/** Applies the Settings menu's Sound slider to the real Howler engine (SFX + music both go
+ * through one global `Howler.volume()` call — see facade.ts's `setMasterVolume`). Without this,
+ * `audioState.volume()` only drives the settings UI's own display; nothing ever reads it back
+ * into the audio engine, so muting/lowering the slider would silently do nothing. */
+function AudioVolumeBridge() {
+  const coordinator = useAssetCoordinator();
+  const audio = useAudio();
+  createEffect(() => coordinator.audio.setMasterVolume(audio.volume()));
+  return null;
+}
+
 const TuningViewportBridge: ParentComponent = (props) => (
   <ViewportProvider autoFill>{props.children}</ViewportProvider>
 );
+
+// TEMPORARY runtime diagnostic — remove once the ViewportToggle visibility bug is confirmed
+// fixed. Logs unconditionally (outside DevOnly) so it reports even while DevOnly is hiding
+// ViewportToggle.
+function ViewportDebugProbe() {
+  const config = useGameConfig();
+  console.log('[viewport-debug]', {
+    VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
+    isProduction: config.isProduction(),
+  });
+  return null;
+}
 
 // Example ECS database — shown in Inspector when no game is active
 const exampleDB = createExampleWorld();
@@ -116,6 +141,11 @@ export default function App() {
                     <DevOnly>
                       <ViewportToggle />
                     </DevOnly>
+                    {/* TEMPORARY isolation test — second direct render, outside DevOnly, to
+                        determine whether DevOnly or ViewportToggle itself is suppressing the
+                        control. Remove alongside ViewportDebugProbe once diagnosed. */}
+                    <ViewportToggle />
+                    <ViewportDebugProbe />
                     <PauseProvider>
                       <CdnManifestProvider
                         manifest={manifest}
@@ -123,6 +153,7 @@ export default function App() {
                       >
                         <AssetProvider>
                           <LoadingTrackerBridge />
+                          <AudioVolumeBridge />
                           <ScreenProvider
                             options={{
                               initialScreen: gameConfig.initialScreen,

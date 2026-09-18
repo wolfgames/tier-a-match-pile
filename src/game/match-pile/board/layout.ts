@@ -1,51 +1,40 @@
 // what_in: viewport width/height (from the Pixi renderer, resize-driven).
-// what_out: the 14 U9 slot containers, positioned per the gameplay-layout-wireframe
-//           (head row, two meta columns, info/board/legend/powerups/action rows, banner),
-//           plus one additive `slot-orders` (V1 Orders HUD, not part of the U9 contract).
-// why_here: ux-contract.md §U9 — every slot is required, visible, and placed by formula;
-//           ui-contract.spec asserts these exact bounds relationships.
+// what_out: the gameplay-screen slot containers, positioned per the required vertical structure:
+//           header (settings / logo / leaderboard) → level-info card → instruction card →
+//           Orders row → playable area → Slots row. Playable-area height/position is derived
+//           from the viewport, not accumulated fixed offsets — see the `boardY` comment below.
+// why_here: layout.ts owns structure only (A5) — content is painted by chrome.ts/ordersHud.ts/
+//           tray.ts/boardRenderer.ts against the containers this returns.
 //
-// CARD-STACK pass (Mahjong-reference restructure): every U9-asserted x/y/w ratio is untouched —
-// only the visual grouping changed. The head row + both meta columns now sit on ONE unified
-// header card (`headerCard`, a plain decorative panel, not a `slot-*` — never asserted by
-// ui-contract.spec) instead of each having its own separate pill/panel. `slot-orders` moved from
-// between info and board to between board and legend — it is documented as additive/V1, not part
-// of the official U9 ordering, so this is free to change; it now matches the reference's
-// board → goal-card → controls stacking (and the user's explicit ask to put it "below the
-// gameplay board").
-// catalog: considered hud-display, tile-grid (both assume their own internal layout grid) —
-//          this slot geometry is exact-pixel and game-specific, so a plain rounded panel via
-//          the contract's own paint()/shape() drawer hooks is the direct fit; none promoted.
+// SCREEN-REBUILD pass: dropped `slot-legend` (the "TAP MATCHING ITEMS..." row) and
+// `slot-powerups` (the hint icon row) — both sat between the board and the Slots Row and were
+// explicitly called out for removal; the instruction card (`slot-info`) is the ONE place that
+// copy appears now, not duplicated below the board too. Also dropped the footer/banner strip —
+// not part of the requested hierarchy, and the freed space goes to the playable area instead
+// (the explicit "make it the dominant visual region" ask). The old five-line meta block (partner/
+// game-type/sub-type/challenge/score) is replaced by one compact `levelCard` (level + timer +
+// score) per "LEVEL INFORMATION CARD" in the required structure.
 import { Container, Graphics } from 'pixi.js';
-import { paletteHex } from '../palette';
-import { paintSurface } from '../surface';
+import { paletteHexFor, FTUE_HIGHLIGHT_HEX, type ThemeName } from '../palette';
+import { paintSurface, drawSoftShadow } from '../surface';
+import { paint, shape, shadowOf } from '../inspector';
 
 const COLUMN_MAX = 430;
-/** Head-row icon button size — chrome.ts's icon glyphs are drawn to match this exactly. */
+/** Head-row icon button size — chrome.ts's settings/leaderboard controls match this exactly. */
 export const HEAD_H = 44;
-const META_LINE_H = 22;
-/** The Mahjong-reference "instruction bar" — this is `slot-info` (U9: "one-line objective; FTUE
- * copy lands here"), now always non-empty (see gameController.ts#infoText) and styled as a
- * prominent pill, not bare text. */
+/** The instruction bar — U9 "one-line objective; FTUE copy lands here", always non-empty
+ * (see gameController.ts#infoText). */
 const INFO_H = 44;
-/** Per-line height for the Orders HUD (one line per active Order). */
-export const ORDERS_LINE_H = 22;
-/** Hard cap on simultaneously-rendered Order lines — matches rules/deriveOrders.ts#MAX_ORDERS (the
- * level-based Orders-count curve introduced in the progression tuning pass now reaches 5-6 Orders
- * at level 15+/25+; this was previously capped at the old flat per-band max of 4, which would have
- * clipped/overflowed the HUD slot for those levels — raised to match, not a broader HUD rewrite. */
-export const ORDERS_MAX_LINES = 6;
-/** Card padding top+bottom around the Orders lines (ordersHud.ts paints inside this). */
-const ORDERS_PAD = 20;
-const ORDERS_H = ORDERS_LINE_H * ORDERS_MAX_LINES + ORDERS_PAD;
-/** Legend is deliberately small/secondary now that `slot-info` carries the prominent
- * always-visible instruction — U1 only requires it stay visible, not prominent. */
-const LEGEND_H = 28;
-const POWERUPS_H = 56;
+/** Compact level/session card: level label + Timer + Score, one row. */
+const LEVEL_CARD_H = 72;
+/** Orders row height — must match board/ordersHud.ts#ORDER_CARD_H (individual cards, no shared
+ * row background — each Order paints its own card). */
+const ORDERS_H = 66;
+/** Slots Row (tray) height. */
 const ACTION_H = 64;
-/** A footer strip, not a banner — light card + coloured text/link, not a solid brand-colour bar. */
-export const BANNER_H = 44;
-const BOARD_MIN_H = 160;
+const BOARD_MIN_H = 220;
+/** Gap either side of the playable area (Orders → board, board → Slots). */
+const BOARD_GAP = 16;
 
 export interface Slots {
   root: Container;
@@ -62,19 +51,26 @@ export interface Slots {
   settings: Container;
   brand: Container;
   profile: Container;
-  partner: Container;
-  gameType: Container;
-  subType: Container;
-  challenge: Container;
-  score: Container;
+  levelCard: Container;
+  levelLabel: Container;
   timer: Container;
+  score: Container;
   info: Container;
+  /** Dedicated dynamic-content child of `info` — the ONLY thing `paintInstructionBar` ever
+   * touches, via a bare `removeChildren()`. `info` itself holds only this plus its own
+   * background (shadow+face) and must never be cleared directly. */
+  infoContent: Container;
   orders: Container;
   board: Container;
-  legend: Container;
-  powerups: Container;
   action: Container;
-  banner: Container;
+  /** Dedicated dynamic-content child of `action` — the ONLY thing `paintTray` ever touches, via
+   * a bare `removeChildren()`. Same reasoning as `infoContent`. */
+  actionContent: Container;
+  /** Hides/shows the instruction card and shifts Orders + the board up by the freed height (or
+   * back down) to fill the gap — post-FTUE levels have no instruction copy to show (see
+   * gameController.ts#infoText) and get that vertical space back instead of an empty blue bar.
+   * Idempotent (sets absolute positions, not relative deltas) — safe to call every repaint. */
+  setInstructionsVisible: (visible: boolean) => void;
 }
 
 function slot(label: string): Container {
@@ -83,7 +79,8 @@ function slot(label: string): Container {
   return c;
 }
 
-export function buildLayout(stage: Container, vw0: number, vh0: number, safeBottom: number): Slots {
+export function buildLayout(stage: Container, vw0: number, vh0: number, safeBottom: number, theme: ThemeName): Slots {
+  const paletteHex = paletteHexFor(theme);
   const vw = Math.min(COLUMN_MAX, vw0);
   const colX = (vw0 - vw) / 2;
   const root = new Container();
@@ -91,111 +88,139 @@ export function buildLayout(stage: Container, vw0: number, vh0: number, safeBott
   stage.addChild(root);
 
   // GLOBAL VISUAL RULE: a full light page background, first — everything else stacks on it.
-  // (Also belt-and-suspenders alongside the Pixi Application's own backgroundColor.)
   const page = new Graphics().rect(0, 0, vw0, vh0).fill(paletteHex.base);
   page.position.set(-colX, 0);
   root.addChild(page);
 
+  // ── Header row: settings (left) — logo (centre) — leaderboard/status (right) ──────────────
   let y = 10;
   const settings = slot('slot-settings');
-  settings.position.set(0.04 * vw, y);
+  settings.position.set(0.04 * vw + HEAD_H / 2, y + HEAD_H / 2);
   const profile = slot('slot-profile');
-  profile.position.set(0.92 * vw - HEAD_H, y);
+  profile.position.set(0.92 * vw - HEAD_H / 2, y + HEAD_H / 2);
   const brand = slot('slot-brand');
-  brand.position.set(vw * 0.5 - vw * 0.16, y);
-  y += HEAD_H + 10;
+  brand.position.set(vw * 0.5, y + HEAD_H / 2);
+  y += HEAD_H + 12;
 
-  const metaTop = y;
-  const partner = slot('slot-partner');
-  partner.position.set(0.04 * vw, metaTop);
-  const gameType = slot('slot-game-type');
-  gameType.position.set(0.04 * vw, metaTop + META_LINE_H);
-  const subType = slot('slot-sub-type');
-  subType.position.set(0.04 * vw, metaTop + META_LINE_H * 2);
-  const challenge = slot('slot-challenge');
-  challenge.position.set(0.64 * vw, metaTop);
+  // ── Level information card: level label + Score on one row, Timer prominent below ─────────
+  const levelCard = slot('card-level-info');
+  levelCard.position.set(0.04 * vw, y);
+  const cardW = vw * 0.92;
+  const levelLabel = slot('slot-level-label');
+  levelLabel.position.set(16, 18);
   const score = slot('slot-score');
-  score.position.set(0.64 * vw, metaTop + META_LINE_H);
-  // Third line of the right meta column — the left column (partner/gameType/subType) already
-  // reserves 3 lines of height here, so this adds the Timer without perturbing any of the
-  // existing U9 bounds relationships (same additive pattern as slot-orders below).
+  score.position.set(cardW - 16, 18);
   const timer = slot('slot-timer');
-  timer.position.set(0.64 * vw, metaTop + META_LINE_H * 2);
-  y = metaTop + META_LINE_H * 3;
+  timer.position.set(cardW / 2, 48);
+  y += LEVEL_CARD_H + 12;
 
-  // ONE unified header card behind settings/brand/profile + both meta columns (Mahjong
-  // reference: gear, logo, level/score pills all read as one rounded container, not five
-  // separate pills). Purely decorative — not a `slot-*`, never asserted by ui-contract.spec.
-  const headerCardH = y - 10 + 14;
-  const headerCard = new Container();
-  headerCard.label = 'card-header';
-  headerCard.position.set(0.02 * vw, 4);
-  paintSurface(headerCard, vw * 0.96, headerCardH, 20, paletteHex.panel, 'soft-push');
-  root.addChild(headerCard);
-  y += 14;
-
-  // Instruction bar (Mahjong's ever-visible teal bar) — this IS `slot-info` (U9: "one-line
-  // objective; FTUE copy lands here"), now always non-empty (gameController.ts#infoText falls
-  // back to the permanent rule reminder outside FTUE) and styled as a real pill, not bare text.
+  // ── Instruction card ───────────────────────────────────────────────────────────────────────
   const info = slot('slot-info');
   info.position.set(0.04 * vw, y);
-  y += INFO_H + 10;
+  y += INFO_H + 14;
 
-  // Anchor everything below the board against where the footer actually starts — not `vh0`
-  // directly, which ignored the footer's own reserved space and could overlap it on shorter
-  // viewports (the fixed rows below board, ORDERS_H+LEGEND_H+POWERUPS_H+ACTION_H plus their
-  // gaps, don't shrink, so treating the full vh0 as available double-counted that space).
-  const bannerTop = vh0 - BANNER_H - safeBottom - 6;
-  const belowBoardH = 12 + ORDERS_H + 10 + LEGEND_H + 8 + POWERUPS_H + 8 + ACTION_H + 8;
-  const remaining = Math.max(BOARD_MIN_H, bannerTop - y - belowBoardH);
-  const board = slot('slot-board');
-  board.position.set(0, y);
-  y += remaining + 12;
-
-  // Orders (goal/progress) card — moved from between info and board to below the board,
-  // matching the reference's board → goal-card stacking and the user's explicit placement ask.
-  // Additive V1 slot, not part of the official U9 ordering (free to move).
+  // ── Orders row (full width — ordersHud.ts centres the card group itself) ─────────────────
   const orders = slot('slot-orders');
-  orders.position.set(0.04 * vw, y);
-  y += ORDERS_H + 10;
+  orders.position.set(0, y);
+  y += ORDERS_H;
+  const ordersBottom = y;
 
-  const legend = slot('slot-legend');
-  legend.position.set(0.04 * vw, y);
-  y += LEGEND_H + 8;
-
-  const powerups = slot('slot-powerups');
-  powerups.position.set(0.04 * vw, y);
-  y += POWERUPS_H + 8;
-
+  // ── Slots Row: anchored from the BOTTOM (independent of board height), full-width so its
+  // centring formula (board/tray.ts#startXFor) resolves against the real viewport, not a
+  // hand-tuned fraction of it. ──────────────────────────────────────────────────────────────
+  const slotsBottom = vh0 - safeBottom - 12;
+  const slotsTop = slotsBottom - ACTION_H;
   const action = slot('slot-action');
-  action.position.set(vw * 0.1, y);
-  y += ACTION_H + 8;
+  action.position.set(0, slotsTop);
 
-  const banner = slot('slot-partner-banner');
-  banner.position.set(0.02 * vw, bannerTop);
+  // ── Playable area: fills (and is centred within) the gap between Orders and Slots — not an
+  // accumulated fixed offset. `availableH` is the real leftover space on THIS viewport; capping
+  // `boardH` at `vw * 1.4` keeps an unusually tall viewport from stretching the board into an
+  // ungainly aspect ratio, centring it in the remaining slack instead. ─────────────────────────
+  const availableTop = ordersBottom + BOARD_GAP;
+  const availableBottom = slotsTop - BOARD_GAP;
+  const availableH = Math.max(BOARD_MIN_H, availableBottom - availableTop);
+  const boardH = Math.min(availableH, vw * 1.4);
+  const boardY = availableTop + (availableH - boardH) / 2;
+  const board = slot('slot-board');
+  board.position.set(0, boardY);
 
-  for (const c of [settings, brand, profile, partner, gameType, subType, challenge, score, timer, info, orders, board, legend, powerups, action, banner]) {
+  // Rigid up-shift by exactly the instruction card's own footprint (height + the gap after it) —
+  // orders/board keep their own sizes, they just start higher, closing the gap the hidden card
+  // leaves behind. Captured as plain numbers (not re-derived from live `.position.y` reads) so
+  // repeated calls stay idempotent regardless of call order.
+  const instructionShift = INFO_H + 14;
+  const ordersY = orders.position.y;
+  const setInstructionsVisible = (visible: boolean): void => {
+    info.visible = visible;
+    orders.position.y = visible ? ordersY : ordersY - instructionShift;
+    board.position.y = visible ? boardY : boardY - instructionShift;
+  };
+
+  for (const c of [settings, brand, profile, levelCard, info, orders, board, action]) {
     root.addChild(c);
   }
-  // Settings/profile/brand sit ON the header card now — chrome.ts draws them unfilled (a thin
-  // outline circle / plain wordmark), matching the reference's icons-on-one-card look instead of
-  // each having its own separate pill.
-  // Instruction bar: filled, secondary-tinted pill — the most prominent text element after the
-  // board itself.
-  paintSurface(info, vw * 0.92, INFO_H, 14, paletteHex.secondary, 'soft-push');
-  // Board: recessed (deep-emboss) so the play surface reads as a distinct, inset area —
-  // separated from the raised HUD chrome around it, not just a same-plane rectangle.
-  paintSurface(board, vw, remaining, 20, paletteHex.base, 'deep-emboss');
-  // Orders/legend/powerups: same neutral panel treatment — real content (order lines / legend
-  // copy / hint icon) painted on top by gameController.ts and its board/ helpers.
-  paintSurface(orders, vw * 0.92, ORDERS_H, 16, paletteHex.panel, 'soft-push');
-  paintSurface(legend, vw * 0.92, LEGEND_H, 10, paletteHex.panel, 'deep-emboss');
-  paintSurface(powerups, vw * 0.92, POWERUPS_H, 12, paletteHex.panel, 'deep-emboss');
-  // Action (tray) row: raised — this is the input surface, it should read as tactile/pressable.
-  paintSurface(action, vw * 0.8, ACTION_H, 16, paletteHex.secondary, 'soft-push');
-  // Footer: a light card now (was a solid brand-primary bar) — chrome.ts paints the tenant
-  // link as coloured text/logo on top, matching the reference's light, understated footer.
-  paintSurface(banner, vw * 0.96, BANNER_H, 16, paletteHex.panel, 'soft-push');
 
-  return { root, vw, vh: vh0, boardWidth: vw, boardHeight: remaining, settings, brand, profile, partner, gameType, subType, challenge, score, timer, info, orders, board, legend, powerups, action, banner };
+  // Instruction bar: filled, secondary-tinted pill. `infoContent` is a dedicated child added
+  // AFTER the background paint (so it's never buried under the face) — the ONLY container
+  // paintInstructionBar ever clears, via a bare `removeChildren()`. A bare `removeChildren()`
+  // directly on `info` would throw the instant `info` has exactly its 2 background children and
+  // nothing else yet (Pixi's own removeChildren only treats an EMPTY range as valid on a
+  // container with ZERO children total — see childrenHelperMixin.js — so "nothing new to
+  // remove" on an otherwise-populated container is not a safe no-op, contrary to what an indexed
+  // `removeChildren(2)` here previously assumed).
+  // Pill fill is the exact `#0056D6` guidance-blue (FTUE_HIGHLIGHT_HEX) with white text
+  // (instructionBar.ts) — a deliberate, scoped pair for this one element, not a change to the
+  // shared `secondary` token (still read by CTA/settings hover fill elsewhere).
+  paintSurface(info, vw * 0.92, INFO_H, 14, FTUE_HIGHLIGHT_HEX, 'soft-push');
+  const infoContent = new Container();
+  infoContent.label = 'info-content';
+  info.addChild(infoContent);
+  // Level card: neutral raised surface — painted BEFORE levelLabel/timer/score are attached
+  // below. `paintSurface` always APPENDS its shadow+face graphics to whatever children a
+  // container already has; attaching them first (as an earlier pass here did) put the solid
+  // face on top of the text, hiding it completely. Every other slot's content is added later, at
+  // runtime, by which point its own paintSurface call has long since run — this is the one slot
+  // whose content containers exist from layout time, so it needs the explicit ordering.
+  paintSurface(levelCard, vw * 0.92, LEVEL_CARD_H, 18, paletteHex.panel, 'soft-push');
+  levelCard.addChild(levelLabel);
+  levelCard.addChild(timer);
+  levelCard.addChild(score);
+  // Board: recessed (deep-emboss) so the play surface reads as a distinct, inset area.
+  paintSurface(board, vw, boardH, 20, paletteHex.base, 'deep-emboss');
+  // Slots Row card — a near-symmetric shadow (not `paintSurface`'s default one-sided `soft-push`
+  // bias) so the card's own visual weight doesn't skew the perceived centre of the slots inside
+  // it (the same class of illusion fixed for the start screen's hero card).
+  drawSoftShadow(action, vw, ACTION_H, 16, 0, 3, 10, 0.12, paletteHex.text);
+  action.addChild(new Graphics().roundRect(0, 0, vw, ACTION_H, 16).fill(paletteHex.secondary));
+  paint(action, `#${paletteHex.secondary.toString(16).padStart(6, '0')}`);
+  shape(action, 16);
+  shadowOf(action, 'soft-push');
+  // Dedicated dynamic-content child, added after the background above — same reasoning as
+  // `infoContent`. `paintTray` clears only this, via a bare `removeChildren()`.
+  const actionContent = new Container();
+  actionContent.label = 'action-content';
+  action.addChild(actionContent);
+
+  return {
+    root,
+    vw,
+    vh: vh0,
+    boardWidth: vw,
+    boardHeight: boardH,
+    settings,
+    brand,
+    profile,
+    levelCard,
+    levelLabel,
+    timer,
+    score,
+    info,
+    infoContent,
+    orders,
+    board,
+    action,
+    actionContent,
+    setInstructionsVisible,
+  };
 }

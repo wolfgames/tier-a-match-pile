@@ -93,6 +93,11 @@ export function paintSurface(
     }
   }
   const face = new Graphics().roundRect(0, 0, w, h, radius).fill(fillHex);
+  // Labelled so tutorial/highlight.ts can hug this exact solid body when highlighting a
+  // paintSurface-drawn element — `c.getLocalBounds()` would include the wider drop-shadow
+  // Graphics drawn above (when `visualRecipe` is set), same class of bug board/tiles.ts's own
+  // `tile-face` label already fixes for hand-drawn tile faces.
+  face.label = 'surface-face';
   c.addChild(face);
   paint(c, `#${fillHex.toString(16).padStart(6, '0')}`);
   shape(c, radius);

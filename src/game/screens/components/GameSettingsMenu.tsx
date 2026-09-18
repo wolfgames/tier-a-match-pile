@@ -1,7 +1,12 @@
 /**
  * DOM-screen settings — the catalog `settings-menu-dom` (gear, panel, dismiss
- * behaviour) with this game's theme and callbacks. Hidden on the `game` screen,
- * where the in-canvas menu takes over.
+ * behaviour) with this game's theme and callbacks.
+ *
+ * Hidden on `game` (the in-canvas Pixi menu owns settings there, ENG-4127) and on `start`
+ * (match-pile's cover screen builds its own fully-Pixi settings icon + panel — see
+ * screens/startViewScene.ts / settingsPanel.ts — wired to the same `useAudio()` state via
+ * StartScreenDeps.audio, not this DOM component; no DOM settings control exists on that screen
+ * at all, visible or hidden).
  *
  * Catalog check: `prefabs/settings-menu-dom` is the whole menu; nothing here is
  * hand-rolled but the analytics wiring, which is game-specific by definition.
@@ -48,7 +53,7 @@ export function GameSettingsMenu(props: GameSettingsMenuProps) {
   };
 
   return (
-    <Show when={screen.current() !== 'game'}>
+    <Show when={screen.current() !== 'game' && screen.current() !== 'start'}>
       <SettingsMenuDom
         gearSrc={gearIcon}
         {...SETTINGS_THEME}

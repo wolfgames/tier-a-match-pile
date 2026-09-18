@@ -28,3 +28,36 @@ export function paletteHexFor(theme: ThemeName): Record<PaletteKey, number> {
     Object.entries(t).map(([k, v]) => [k, Number.parseInt((v as string).slice(1), 16)]),
   ) as Record<PaletteKey, number>;
 }
+
+/** WCAG-ish relative luminance (sRGB, no gamma-correct linearisation — close enough for a
+ * light/dark text pick, not a contrast-ratio compliance claim). */
+function relativeLuminance(hex: number): number {
+  const r = ((hex >> 16) & 255) / 255;
+  const g = ((hex >> 8) & 255) / 255;
+  const b = (hex & 255) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Picks readable text colour for an arbitrary fill: `onPrimary` is only guaranteed to contrast
+ * with `primary` — the token schema has no `onSecondary`/`onAccent`. This was invisible under
+ * the McDonald's sheet (secondary was a near-white cream, `text` always read fine on it) and
+ * became a real illegible-text bug the moment a tenant's `secondary` is dark (Wolf's teal
+ * `#008C99`) — `MATCH PILE` on the start-screen hero card, the instruction bar, and the score
+ * pill all sat dark-text-on-dark. Every call site that paints text on a *dynamically chosen*
+ * fill (not always `primary`/`base`/`panel`) must route the text colour through this instead of
+ * assuming `text` or `onPrimary`.
+ */
+export function bestTextColorOn(fillHex: number, palette: Record<PaletteKey, number>): number {
+  return relativeLuminance(fillHex) > 0.55 ? palette.text : 0xffffff;
+}
+
+/** Fixed FTUE guidance blue (VFX pass, docs/GAME-DESIGN.md#ftue) — a UX signal colour, not a
+ * tenant brand token: unlike primary/secondary/accent it must never shift per tenant sheet, so
+ * it lives here rather than in brand.tokens.json. Tutorial highlight/pulse use only. */
+export const FTUE_HIGHLIGHT_HEX = 0x0056d6;
+
+/** Fixed teal (VFX pass) for "this progressed one of my Orders" feedback — an Order-match ring,
+ * and the win celebration. Also a fixed UX signal colour, not a tenant brand token: distinct from
+ * FTUE_HIGHLIGHT_HEX's guidance blue so the two moments never read as the same signal. */
+export const ORDER_PROGRESS_HEX = 0x008c99;

@@ -31,11 +31,13 @@
 // per-tile `zIndex` let Pixi's own topmost-wins hit-testing route overlapping taps correctly for
 // free.
 import type { Container } from 'pixi.js';
+import gsap from 'gsap';
 import type { GameDatabase } from '../ecs/plugin';
 import { buildTile, tileLayoutFor, tileSizeFor } from './tiles';
 import { isGeometricallyExposed, type TileRect } from './exposure';
 import { TIER_CONFIG } from '../generator/objectTypes';
 import type { ThemeName } from '../palette';
+import { PilePhysics, STANDARD_PHYSICS, type PhysicsTuning } from './pilePhysics';
 
 export interface BoardRendererOptions {
   layer: Container;
@@ -48,15 +50,26 @@ export interface BoardRendererOptions {
   db: GameDatabase;
   onTap: (id: string) => void;
   getTheme: () => ThemeName;
+  /** PILE-PHYSICS — the caller picks the profile (pilePhysics.ts#physicsTuningForLevel); defaults
+   * to pilePhysics.ts#STANDARD_PHYSICS if omitted. */
+  physicsTuning?: PhysicsTuning;
 }
 
 export class BoardRenderer {
   private views = new Map<string, Container>();
   private unobserve: (() => void) | null = null;
+  // PILE-PHYSICS prototype: presentation-only sim, keyed by tile id — completely separate from
+  // `db.resources.pile` (the logical source of truth `sync()` below still reads exclusively).
+  // Survives across `sync()` calls (unlike `views`, which are destroyed/rebuilt every sync per
+  // the R-EXPOSURE contract) so a tile's fall/settle continues smoothly frame to frame regardless
+  // of how often the logical pile repaints.
+  private physics: PilePhysics;
+  private physicsPuzzleRef: unknown = null;
 
   constructor(private opts: BoardRendererOptions) {
     this.opts.layer.eventMode = 'passive';
     this.opts.layer.sortableChildren = true;
+    this.physics = new PilePhysics(opts.physicsTuning ?? STANDARD_PHYSICS);
     this.unobserve = opts.db.observe.resources.pile(() => this.sync());
   }
 
@@ -72,18 +85,37 @@ export class BoardRenderer {
     const cellW = boardWidth && cols ? boardWidth / cols : 60;
     const cellH = boardHeight && rows ? boardHeight / rows : 60;
 
+    // PILE-PHYSICS: a new level's puzzle means every previous body is meaningless (different
+    // tiles, different ids almost certainly) — drop them all rather than risk a reused id
+    // inheriting a stale pose from the last level.
+    if (db.resources.currentPuzzle !== this.physicsPuzzleRef) {
+      this.physicsPuzzleRef = db.resources.currentPuzzle;
+      this.physics.reset();
+    }
+
     const live = new Set(state.tiles.map((t) => t.id));
     for (const [id, view] of this.views) {
       if (!live.has(id)) {
+        // A press's scale-punch tween (see the `pointerdown` wiring below) may still be running
+        // if this tile was matched moments after being pressed — kill it before destroy, same
+        // "kill tweens before destroying targets" guardrail every other animated node follows.
+        gsap.killTweensOf(view.scale);
         view.destroy({ children: true });
         this.views.delete(id);
+        // PILE-PHYSICS: this tile just left the logical pile (matched/collected) — stop
+        // simulating it, and wake any sleeping neighbours so they fall into the gap it left.
+        const lastPose = this.physics.remove(id);
+        if (lastPose) this.physics.wakeNear(lastPose.x, lastPose.y);
       }
     }
     // Every remaining tile's on-screen coverage can change whenever any other tile is picked
     // (removing whatever was covering it), so exposed/covered tiles are rebuilt each sync (cheap:
     // a couple hundred tiles per level at most, and this only runs on a `pile` change, never
     // per-frame).
-    for (const [, view] of this.views) view.destroy({ children: true });
+    for (const [, view] of this.views) {
+      gsap.killTweensOf(view.scale);
+      view.destroy({ children: true });
+    }
     this.views.clear();
 
     // Placement order matches intended visual stacking (lowest layer first, deterministic tie-
@@ -101,17 +133,65 @@ export class BoardRenderer {
     const layouts = new Map(
       ordered.map((tile) => [tile.id, tileLayoutFor(tile, safeCellW, safeCellH, boardWidth, boardHeight)]),
     );
-    const rects: TileRect[] = ordered.map((tile) => {
+
+    // PILE-PHYSICS: spawn a body for any tile that doesn't have one yet — in practice only ever
+    // happens on a level's first sync, since the full tile set is fixed at load and only shrinks
+    // (R-EXPOSURE header note). The scatter formula's own x/y/rot becomes the body's rest anchor;
+    // existing bodies are left alone here — their LIVE (possibly still-falling) pose is what gets
+    // used below, not this formula.
+    const radius = (tileSize / 2) * (this.opts.physicsTuning ?? STANDARD_PHYSICS).collisionRadiusRatio;
+    for (const tile of ordered) {
+      if (this.physics.has(tile.id)) continue;
       const l = layouts.get(tile.id)!;
-      return { id: tile.id, x: l.x, y: l.y, w: tileSize, h: tileSize, rotation: l.rot, zIndex: l.zIndex };
+      this.physics.spawn(tile.id, l.x, l.y, l.rot, radius);
+    }
+
+    // Exposure/paint-order geometry reads each tile's LIVE physics pose, not the static scatter
+    // formula — so tap-acceptance always matches what's actually rendered, even mid-settle
+    // (preserves the existing "exposure calc and the actual Pixi paint order can never disagree"
+    // contract, just fed from a different position source).
+    const rects: TileRect[] = ordered.map((tile) => {
+      const pose = this.physics.getPose(tile.id)!;
+      const zIndex = layouts.get(tile.id)!.zIndex;
+      return { id: tile.id, x: pose.x, y: pose.y, w: tileSize, h: tileSize, rotation: pose.rotation, zIndex };
     });
 
     for (const tile of ordered) {
-      const layout = layouts.get(tile.id)!;
+      const pose = this.physics.getPose(tile.id)!;
+      const zIndex = layouts.get(tile.id)!.zIndex;
       const exposed = isGeometricallyExposed(rects, tile.id);
-      const view = buildTile(tile, layout, tileSize, exposed, getTheme(), onTap);
+      const view = buildTile(tile, { x: pose.x, y: pose.y, rot: pose.rotation, zIndex }, tileSize, exposed, getTheme(), onTap);
+      // PRESS-FEEDBACK pass: `pointerdown` fires immediately on touch, independent of whether the
+      // eventual `pointertap` resolves as a valid move — never touches ECS/logical state, purely
+      // the tile's own physics body + a quick visual compression. Gated on `exposed` to match
+      // buildTile's own interactivity gating (a covered tile has `eventMode: 'none'`, so this
+      // would never fire for one anyway; the explicit check just documents why). The scale punch
+      // is a plain GSAP tween (physics only owns x/y/rotation — see pilePhysics.ts's header note),
+      // killed before this exact view is ever destroyed (both loops above).
+      if (exposed) {
+        view.on('pointerdown', () => {
+          this.physics.press(tile.id);
+          gsap.killTweensOf(view.scale);
+          gsap.to(view.scale, { x: 0.92, y: 0.92, duration: 0.06, ease: 'sine.out', yoyo: true, repeat: 1 });
+        });
+      }
       layer.addChild(view);
       this.views.set(tile.id, view);
+    }
+  }
+
+  /** PILE-PHYSICS: advances the pile simulation by `dt` seconds and pushes the result onto
+   * whichever tile views currently exist — call every frame from the controller's own ticker
+   * (never a new frame loop of its own; guardrail #3). Only touches a view when its body is
+   * actually awake, so a fully-settled pile costs one `Map` iteration and nothing else per frame. */
+  tick(dt: number): void {
+    this.physics.step(dt, { width: this.opts.boardWidth, height: this.opts.boardHeight });
+    for (const [id, view] of this.views) {
+      if (this.physics.isSleeping(id)) continue;
+      const pose = this.physics.getPose(id);
+      if (!pose) continue;
+      view.position.set(pose.x, pose.y);
+      view.rotation = pose.rotation;
     }
   }
 

@@ -1,26 +1,26 @@
 {
   "$schema": "wolf-tier-a-brand-tokens/2",
-  "tenant": "mcdonalds",
-  "displayName": "McDonald's",
+  "tenant": "wolf",
+  "displayName": "Wolf Games",
   "light": {
     "base": "#DDE1E0",
     "panel": "#E8EBED",
     "text": "#5B6E80",
     "grid": "#1C1C1E",
-    "primary": "#DA291C",
-    "secondary": "#FBF6E0",
-    "accent": "#FFC72C",
-    "onPrimary": "#FFC72C"
+    "primary": "#DFFF00",
+    "secondary": "#EBEDC2",
+    "accent": "#DFFF00",
+    "onPrimary": "#1A1A1A"
   },
   "dark": {
     "base": "#1A1A1A",
     "panel": "#222222",
     "text": "#CCCCCC",
     "grid": "#1C1C1E",
-    "primary": "#DA291C",
-    "secondary": "#FBF6E0",
-    "accent": "#FFC72C",
-    "onPrimary": "#FFC72C"
+    "primary": "#DFFF00",
+    "secondary": "#424720",
+    "accent": "#DFFF00",
+    "onPrimary": "#1A1A1A"
   },
   "type": {
     "display": "Montserrat",
@@ -85,5 +85,5 @@
     "tile": 96
   },
   "_tenant": "The four tenant colours per theme and the type block are copied from references/brand-sheets/<tenant>.tokens.json by tier-a/init.sh (jq merge). Never null. The sheet also carries logo + watermark asset ids; those are NOT merged here â they live in tier-a/TENANT.json and are seeded into tier-a/ASSET_SET.json.required by init.sh.",
-  "link": "https://www.mcdonalds.com"
+  "link": "https://wolf.games"
 }

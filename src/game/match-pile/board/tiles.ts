@@ -2,15 +2,15 @@
 //          board/exposure.ts, via boardRenderer.ts) + the current theme + a tap callback.
 // what_out: one `tile-<id>` Pixi node, scattered/rotated within its cell for a "freeform pile"
 //           look, with real interactivity/z-order for whichever tiles are geometrically exposed.
-// why_here: board/ per A6/A9; ART TODO — colour-coded placeholder discs stand in for the
-//           24-item object pool until Phase 2 (tier-a-assets-v4) publishes real sprites
-//           (docs/recipes/asset-pipeline.md — no placeholder art ships without this note).
-import { Container, Graphics, Text } from 'pixi.js';
+// why_here: board/ per A6/A9; the piece face is a neutral raised chip with the item's Pixi vector
+//           icon (matchIcons.ts — shape + stable colour) on top, not a food-themed drawing —
+//           the same icon+colour identity board pieces, Orders cards, and Slots Row all share.
+import { Container, Graphics } from 'pixi.js';
 import type { Tile } from '../rules/types';
 import { paint, shadowOf } from '../inspector';
 import { paletteHexFor, type ThemeName } from '../palette';
 import { drawSoftShadow } from '../surface';
-import { OBJECT_TYPE_POOL } from '../generator/objectTypes';
+import { drawMatchIconFor } from '../matchIcons';
 
 /**
  * SCATTER-FILL pass (tier-a-build-v4, Part B): tile size used to be a flat 40px regardless of
@@ -51,12 +51,6 @@ function hash01(s: string): number {
     h = Math.imul(h, 16777619);
   }
   return ((h >>> 0) % 10000) / 10000;
-}
-
-const TINT_KEYS = ['primary', 'secondary', 'accent', 'text'] as const;
-
-function glyphFor(typeId: string): string {
-  return typeId.split('-').map((w) => w[0]).join('').slice(0, 3).toUpperCase();
 }
 
 export interface TileLayout {
@@ -138,21 +132,20 @@ export function buildTile(
   c.zIndex = layout.zIndex;
 
   const palette = paletteHexFor(theme);
-  const typeIndex = OBJECT_TYPE_POOL.indexOf(tile.typeId as (typeof OBJECT_TYPE_POOL)[number]);
-  const tintKey = TINT_KEYS[typeIndex >= 0 ? typeIndex % TINT_KEYS.length : 0];
-  const tint = palette[tintKey];
-  // Real soft-push depth (was metadata-only before `surface.ts` existed) — every piece on the
-  // pile now reads as a tactile, slightly raised object instead of a flat colour swatch.
-  // Offsets are relative to the face's own origin (-size/2, -size/2), matching its roundRect below.
+  // Neutral raised chip — the icon (matchIcons.ts) carries the item's colour identity, not the
+  // chip itself, so a piece's colour never competes with or gets muddied by a second background
+  // tint.
   drawSoftShadow(c, size, size, 8, -size / 2 - 3, -size / 2 - 3, 6, 0.12, palette.text);
-  const g = new Graphics().roundRect(-size / 2, -size / 2, size, size, 8).fill(tint);
+  const g = new Graphics().roundRect(-size / 2, -size / 2, size, size, 8).fill(palette.panel);
+  // Labelled so tutorial/highlight.ts can hug this exact solid body — `getLocalBounds()` on `c`
+  // itself would include the soft-shadow Graphics above (drawn wider than the tile face).
+  g.label = 'tile-face';
   c.addChild(g);
-  paint(c, `#${tint.toString(16).padStart(6, '0')}`);
+  paint(c, `#${palette.panel.toString(16).padStart(6, '0')}`);
   shadowOf(c, 'soft-push');
 
-  const glyph = new Text({ text: glyphFor(tile.typeId), style: { fontSize: 11, fill: palette.onPrimary, fontWeight: '700' } });
-  glyph.anchor.set(0.5);
-  c.addChild(glyph);
+  const icon = drawMatchIconFor(tile.typeId, size);
+  c.addChild(icon);
 
   // R-EXPOSURE (geometric-exposure pass): interactivity/alpha now reflect real on-screen
   // coverage (board/exposure.ts), not the abstract grid-cell/layer rule — a tile behind another

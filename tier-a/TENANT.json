@@ -1,16 +1,16 @@
 {
   "$schema": "wolf-tier-a-brand-sheet/1",
-  "tenant": "mcdonalds",
-  "displayName": "McDonald's",
-  "primary": "#DA291C",
-  "secondary": "#FBF6E0",
-  "accent": "#FFC72C",
-  "onPrimary": "#FFC72C",
+  "tenant": "wolf",
+  "displayName": "Wolf Games",
+  "primary": "#DFFF00",
+  "secondary": "#424720",
+  "accent": "#DFFF00",
+  "onPrimary": "#1A1A1A",
   "type": {
     "display": "Montserrat",
     "numeric": "Rubik"
   },
-  "logo": "asset://mark-mcdonalds",
-  "watermark": "asset://mark-mcdonalds-arches",
-  "link": "https://www.mcdonalds.com"
+  "logo": "asset://mark-wolf",
+  "watermark": "asset://mark-wolf-glyph",
+  "link": "https://wolf.games"
 }

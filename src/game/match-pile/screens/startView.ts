@@ -1,147 +1,49 @@
-// what_in: StartScreenDeps (goto, initGpu, tuning) from src/game/screens/StartScreen.tsx.
-// what_out: setupStartScreen — a small Pixi scene composed as one tight group (Mahjong
-//           reference): settings icon, brand wordmark, hero card, PLAY CTA, instruction line.
+// what_in: StartScreenDeps (goto, initGpu, tuning, coordinator, audio) from src/game/screens/
+//          StartScreen.tsx.
+// what_out: setupStartScreen — owns the Pixi Application lifecycle (init/resize/theme/destroy)
+//           and the settings-popover open/closed state, and delegates all visual composition to
+//           startViewScene.ts's `paintStartScene`.
 // why_here: this game's template renders start on Pixi despite the general DOM guidance —
 //           kept consistent because N9's colour probe only matches hex strings `paint()`
 //           records; DOM computed styles report rgb(), which can never match a hex token.
-//
-// CARD-STACK pass (Mahjong-reference restructure): the previous version spread brand/card/CTA
-// across fractions of the viewport height (0.05h / 0.35h / 0.72h), which put huge, disconnected
-// gaps between them on anything taller than the shortest test viewport. Every element is now
-// placed at a FIXED pixel offset from the previous one, so the whole group reads as one
-// deliberately-composed unit near the top — leftover space stays below it, matching the
-// reference, instead of being distributed between the pieces.
-import { Application, Container, Graphics, Text } from 'pixi.js';
+import { Application, Container } from 'pixi.js';
 import gsap from 'gsap';
 import type { StartScreenController, StartScreenDeps, SetupStartScreen } from '~/game/game-contract';
-import { paint, shadowOf, shape, fitText } from '../inspector';
 import { paletteHexFor } from '../palette';
-import { paintSurface, drawSoftShadow } from '../surface';
-import { drawGearGlyph } from '../board/chrome';
-import { LEGEND_COPY } from '../board/legend';
-import { FONTS } from '../typography';
+import { fontsReady } from '../fontsReady';
 import { registerDebugContext } from '../debug';
-import tokens from '../brand.tokens.json';
 import { getGameWorld } from '../world';
 import { palette } from '../palette';
-
-const SETTINGS_SIZE = 40;
+import { paintStartScene, stopStartSceneAmbient } from './startViewScene';
+import { getAudioManager } from '../audio/manager';
 
 export const setupStartScreen: SetupStartScreen = (deps: StartScreenDeps): StartScreenController => {
   let app: Application | null = null;
   let root: Container | null = null;
   let destroyed = false;
   let unobserveTheme: (() => void) | null = null;
-
-  const paintScene = (root: Container, w: number, h: number) => {
-    for (const c of root.children) gsap.killTweensOf(c);
-    root.removeChildren().forEach((c) => c.destroy({ children: true }));
-    const theme = getGameWorld().resources.theme;
-    const palette = paletteHexFor(theme);
-
-    // GLOBAL VISUAL RULE: full light page background — no black canvas showing through.
-    const bg = new Graphics().rect(0, 0, w, h).fill(palette.base);
-    root.addChild(bg);
-
-    // Settings — circular secondary control, top-right (reference image 3). Non-functional
-    // stub is out of scope for this pass; matches U9's `slot-settings` role/placement pattern
-    // used on the game screen without claiming a settings menu exists here.
-    const settings = new Container();
-    settings.label = 'icon-settings';
-    settings.position.set(w - 16 - SETTINGS_SIZE, 20);
-    settings.eventMode = 'static';
-    settings.accessible = true;
-    settings.accessibleTitle = 'Settings';
-    settings.addChild(new Graphics().circle(SETTINGS_SIZE / 2, SETTINGS_SIZE / 2, SETTINGS_SIZE / 2 - 1).stroke({ width: 1.5, color: palette.text, alpha: 0.35 }));
-    drawGearGlyph(settings, SETTINGS_SIZE);
-    root.addChild(settings);
-
-    // Brand — a wordmark, not a filled CTA-look pill (reference: plain coloured logotype,
-    // centred near the top). `slot-brand` still wraps it (N9/U4b: a role="mark" node must
-    // overlap slot-brand) — the slot itself just carries no fill any more.
-    const brand = new Container();
-    brand.label = 'slot-brand';
-    brand.position.set(w / 2 - w * 0.3, 20);
-    const brandText = new Text({ text: tokens.displayName, style: { fontFamily: FONTS.display, fontSize: 20, fill: palette.primary, fontWeight: '800' } });
-    brandText.label = 'mark-tenant';
-    brandText.anchor.set(0.5, 0);
-    brandText.position.set(w * 0.3, 6);
-    fitText(brandText, w * 0.6);
-    paint(brandText, `#${palette.primary.toString(16).padStart(6, '0')}`);
-    brand.addChild(brandText);
-    root.addChild(brand);
-
-    // Hero card — large rounded light card, title + subtitle. Fixed gap below the brand text,
-    // not a fraction of viewport height (see file header).
-    const card = new Container();
-    card.label = 'panel-title-card';
-    const cardW = w * 0.82;
-    const cardH = 128;
-    const cardY = 76;
-    card.position.set((w - cardW) / 2, cardY);
-    paintSurface(card, cardW, cardH, 22, palette.secondary, 'soft-push', theme);
-    const title = new Text({ text: 'MATCH PILE', style: { fontFamily: FONTS.display, fontSize: 28, fill: palette.text, fontWeight: '800' } });
-    title.label = 'text-title';
-    title.anchor.set(0.5);
-    title.position.set(cardW / 2, cardH / 2 - 14);
-    fitText(title, cardW - 32);
-    card.addChild(title);
-    const subtitle = new Text({ text: 'MATCH & COLLECT', style: { fontFamily: FONTS.body, fontSize: 13, fill: palette.text, fontWeight: '600', letterSpacing: 1 } });
-    subtitle.label = 'text-subtitle';
-    subtitle.alpha = 0.6;
-    subtitle.anchor.set(0.5);
-    subtitle.position.set(cardW / 2, cardH / 2 + 20);
-    fitText(subtitle, cardW - 32);
-    card.addChild(subtitle);
-    root.addChild(card);
-
-    // PLAY — large full-pill CTA, fixed gap below the card.
-    const btnW = Math.min(240, w * 0.62);
-    const btnH = 64;
-    const btnY = cardY + cardH + 36;
-    const btn = new Container();
-    btn.label = 'cta-play';
-    btn.accessible = true;
-    btn.accessibleTitle = 'Play';
-    btn.accessibleHint = 'Play';
-    btn.eventMode = 'static';
-    btn.position.set(w / 2 - btnW / 2, btnY);
-    // brand-cta: primary fill + a real (now-fixed, capped-blur) drop shadow.
-    drawSoftShadow(btn, btnW, btnH, btnH / 2, 0, 4, 8, 0.18, palette.text);
-    btn.addChild(new Graphics().roundRect(0, 0, btnW, btnH, btnH / 2).fill(palette.primary));
-    paint(btn, `#${palette.primary.toString(16).padStart(6, '0')}`);
-    shadowOf(btn, 'brand-cta');
-    shape(btn, btnH / 2);
-    const label = new Text({ text: 'PLAY', style: { fontFamily: FONTS.display, fontSize: 22, fill: palette.onPrimary, fontWeight: '700' } });
-    label.anchor.set(0.5);
-    label.position.set(btnW / 2, btnH / 2);
-    btn.addChild(label);
-    btn.on('pointertap', () => void onPlay());
-    root.addChild(btn);
-    // CTA pulse (ux-contract "3s CTA pulse"), not a position float: Playwright's actionability
-    // check requires a stable bounding box before it will click, so the idle motion here is
-    // alpha-only — the button never moves or resizes, only breathes.
-    gsap.to(btn, { alpha: 0.85, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-
-    // Instruction — one short centred line below PLAY (reference: small, letter-spaced).
-    // Reuses the same permanent rule copy as the game screen's instruction bar/legend.
-    const instruction = new Text({
-      text: LEGEND_COPY,
-      style: { fontFamily: FONTS.body, fontSize: 11, fill: palette.text, fontWeight: '600', letterSpacing: 1 },
-    });
-    instruction.label = 'text-instruction';
-    instruction.alpha = 0.55;
-    instruction.anchor.set(0.5, 0);
-    instruction.position.set(w / 2, btnY + btnH + 18);
-    fitText(instruction, w * 0.85);
-    root.addChild(instruction);
-  };
+  let settingsOpen = false;
+  // Shared singleton (audio/manager.ts) — the game screen picks up whatever this screen started
+  // instead of restarting it (see gameController.ts's own note). `deps.coordinator.audio` never
+  // depends on a loaded bundle, but the audio-* bundles themselves only finish loading once
+  // `loadBundle('audio-music-match-pile')` below resolves — a button tap before that point
+  // silently no-ops (facade.audio.play returns -1 for an unloaded channel), same as any other
+  // real SFX call on an unloaded bundle. Expected on a cold boot, briefly.
+  const audioManager = getAudioManager(deps.coordinator.audio);
 
   const onPlay = async () => {
+    audioManager.playButtonTap();
     deps.unlockAudio();
     await deps.loadCore();
     try {
-      await deps.loadAudio();
+      // NOT deps.loadAudio() — it reloads every audio-* bundle unconditionally on every call,
+      // and the Howler loader has no dedup guard (loadBundle always builds a brand-new Howl and
+      // overwrites the map entry). The cover screen's own early load (below) may already have
+      // `audio-music-match-pile` loaded and playing by the time PLAY is tapped; reloading it here
+      // would orphan that still-playing Howl instance while a second one starts — the exact
+      // "music sounds like twice at once" bug. Load each bundle only if it isn't already loaded.
+      if (!deps.coordinator.isLoaded('audio-sfx-match-pile')) await deps.loadBundle?.('audio-sfx-match-pile');
+      if (!deps.coordinator.isLoaded('audio-music-match-pile')) await deps.loadBundle?.('audio-music-match-pile');
     } catch {
       /* audio optional */
     }
@@ -152,6 +54,26 @@ export const setupStartScreen: SetupStartScreen = (deps: StartScreenDeps): Start
   return {
     backgroundColor: palette.base,
     init(container: HTMLDivElement) {
+      // Background-music must be audible from the cover screen, not just once gameplay starts —
+      // load the audio-music bundle in parallel with everything else below (never blocks GPU
+      // init/first paint) and start the loop the moment it's ready. If the player hasn't tapped
+      // anything yet, the browser holds real playback until the first tap unlocks audio (Howler's
+      // own default autoplay-unlock listens for that globally) — this just makes sure the loop is
+      // already queued and ready to go the instant that happens.
+      //
+      // Guarded on isLoaded(): this screen's init() re-runs on every mount (e.g. Results ->
+      // "Main Menu" -> back here), and the Howler loader rebuilds a brand-new Howl on every
+      // loadBundle() call with no dedup — reloading an already-loaded bundle would orphan the
+      // Howl that's already playing while a second one starts on top of it (the "sounds like
+      // twice" bug). If it's already loaded, just (re)assert the loop directly — startGameplayMusic()
+      // is itself idempotent and no-ops if it's already the track playing.
+      if (deps.coordinator.isLoaded('audio-music-match-pile')) {
+        audioManager.startGameplayMusic();
+      } else {
+        void deps.loadBundle?.('audio-music-match-pile')
+          .then(() => { if (!destroyed) audioManager.startGameplayMusic(); })
+          .catch(() => { /* music optional — SFX/gameplay must not depend on this bundle loading */ });
+      }
       void (async () => {
         await deps.initGpu();
         if (destroyed) return;
@@ -163,7 +85,7 @@ export const setupStartScreen: SetupStartScreen = (deps: StartScreenDeps): Start
         const initOptions = {
           resizeTo: container,
           // Pixi's default backgroundColor is black — was never overridden, so the canvas
-          // showed through black wherever `paintScene`'s own `bg` rect wasn't yet covering it
+          // showed through black wherever `paintStartScene`'s own bg rect wasn't yet covering it
           // (GLOBAL VISUAL RULE: no black background, ever).
           backgroundColor: paletteHexFor(getGameWorld().resources.theme).base,
           backgroundAlpha: 1,
@@ -171,23 +93,54 @@ export const setupStartScreen: SetupStartScreen = (deps: StartScreenDeps): Start
           autoDensity: true,
           accessibilityOptions: { enabledByDefault: true },
         };
-        await application.init(initOptions);
+        // `core-branding` is the real template-amino logo atlas (see startViewScene.ts) — must
+        // finish loading before the first paint creates its Sprite.
+        await Promise.all([application.init(initOptions), fontsReady, deps.loadBundle?.('core-branding')]);
         if (destroyed) return;
         container.appendChild(application.canvas as HTMLCanvasElement);
         application.stage.eventMode = 'passive';
         const sceneRoot = new Container();
         root = sceneRoot;
         application.stage.addChild(sceneRoot);
-        const repaint = () => paintScene(sceneRoot, application.screen.width, application.screen.height);
-        repaint();
-        application.renderer.on('resize', repaint);
+        // Only the very first paint animates in — a resize or theme-toggle repaint rebuilds this
+        // same tree from scratch (paintStartScene's own top-of-function teardown) and must not
+        // replay the entrance fade every time, or resizing the window would look like a bug.
+        let firstPaint = true;
+        const repaint = () => {
+          paintStartScene(sceneRoot, application.screen.width, application.screen.height, {
+            onPlay: () => void onPlay(),
+            coordinator: deps.coordinator,
+            audio: deps.audio,
+            settingsOpen,
+            onToggleSettings: () => {
+              audioManager.playButtonTap();
+              settingsOpen = !settingsOpen;
+              repaint();
+            },
+            onButtonTap: () => audioManager.playButtonTap(),
+            animateEntrance: firstPaint,
+          });
+          firstPaint = false;
+        };
+        // `db.observe.resources.X(fn)` replays the CURRENT value synchronously the instant it's
+        // subscribed (create-observed-database.js's `observeEntity` calls `observer(...)` before
+        // ever registering it) — so subscribing here already performs the first paint. A separate
+        // explicit `repaint()` call before this line was the fade-in bug: it painted the animated
+        // (alpha 0→1) tree first, then this subscription's synchronous replay immediately repainted
+        // over it with `firstPaint` already false — all in the same tick, before the browser ever
+        // rendered a frame, so the entrance tween never had a chance to actually show.
         unobserveTheme = getGameWorld().observe.resources.theme(repaint);
+        application.renderer.on('resize', repaint);
         registerDebugContext({ stage: () => application.stage, screen: () => ({ w: application.screen.width, h: application.screen.height }) });
       })();
     },
     destroy() {
       destroyed = true;
       unobserveTheme?.();
+      // The decorative background's ambient motion runs its own `gsap.ticker` callback (via
+      // `applyMotion`, not a plain tween) — `gsap.killTweensOf` below never touches it, so it must
+      // be stopped explicitly or it keeps writing into a destroyed Container every frame.
+      stopStartSceneAmbient();
       if (root) for (const c of root.children) gsap.killTweensOf(c);
       app?.destroy(true, { children: true });
       app = null;

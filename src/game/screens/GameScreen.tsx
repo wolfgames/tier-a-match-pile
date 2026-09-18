@@ -4,7 +4,6 @@ import { useRendererHost } from '@wolfgames/components/solid';
 
 import { useAssets } from '~/core/systems/assets';
 import { PauseOverlay, useTuning, type ScaffoldTuning } from '~/core';
-import { Logo } from '~/core/ui/Logo';
 import { useAudio } from '~/core/systems/audio';
 import { useScreen } from '~/core/systems/screens';
 import { useGameTracking } from '~/game/setup/tracking';
@@ -93,11 +92,6 @@ export default function GameScreen() {
         aria-atomic="true"
       >
         {controller.ariaText()}
-      </div>
-
-      {/* Wolf Games logo at bottom center */}
-      <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
-        <Logo />
       </div>
     </div>
 

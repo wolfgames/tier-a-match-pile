@@ -27,6 +27,16 @@ import type { GameTuningBase } from '~/core/systems/tuning/types';
 
 export type GameMode = 'dom' | 'pixi';
 
+/** Real audio controls (music/volume) — shared by GameControllerDeps and StartScreenDeps so a
+ * Pixi-drawn settings surface on either screen can act on the SAME audio system the DOM settings
+ * menu uses elsewhere, not a duplicate/disconnected one. */
+export interface AudioControls {
+  volume: () => number;
+  setVolume: (v: number) => void;
+  musicEnabled: () => boolean;
+  toggleMusic: () => void;
+}
+
 // ---------------------------------------------------------------------------
 // Game Controller (used by GameScreen.tsx)
 // ---------------------------------------------------------------------------
@@ -34,7 +44,7 @@ export type GameMode = 'dom' | 'pixi';
 export interface GameControllerDeps {
   coordinator: AssetCoordinatorFacade;
   tuning: { scaffold: ScaffoldTuning; game: GameTuningBase };
-  audio: unknown;
+  audio: AudioControls;
   gameData: unknown;
   analytics: unknown;
   /** Navigate to another screen (e.g. 'results' when the game ends). */
@@ -72,6 +82,9 @@ export interface StartScreenDeps {
   loadBundle?: (name: string, onProgress?: (p: number) => void) => Promise<void>;
   tuning: { scaffold: ScaffoldTuning; game: GameTuningBase };
   analytics: { trackGameStart: (params: { start_source: string; is_returning_player: boolean }) => void };
+  /** Real audio controls (music/volume), for a Pixi-drawn settings surface that needs to act on
+   *  the same audio system the DOM settings menu uses elsewhere — not a duplicate audio state. */
+  audio?: AudioControls;
 }
 
 export interface StartScreenController {
@@ -84,3 +97,27 @@ export interface StartScreenController {
 }
 
 export type SetupStartScreen = (deps: StartScreenDeps) => StartScreenController;
+
+// ---------------------------------------------------------------------------
+// Results Screen Controller (used by ResultsScreen.tsx)
+// ---------------------------------------------------------------------------
+
+export interface ResultsScreenDeps {
+  goto: (screen: string) => void;
+  coordinator: AssetCoordinatorFacade;
+  /** `core-branding` (the real logo atlas) is already loaded and never unloaded by the time
+   * results shows (loaded once by the start screen) — this is defensive, matching
+   * StartScreenDeps's own optional `loadBundle`, not a load this screen actually depends on. */
+  loadBundle?: (name: string, onProgress?: (p: number) => void) => Promise<void>;
+}
+
+export interface ResultsScreenController {
+  /** Mount the results screen into a container div */
+  init: (container: HTMLDivElement) => void;
+  /** Tear down the results screen */
+  destroy: () => void;
+  /** Background color for the screen wrapper */
+  backgroundColor: string;
+}
+
+export type SetupResultsScreen = (deps: ResultsScreenDeps) => ResultsScreenController;

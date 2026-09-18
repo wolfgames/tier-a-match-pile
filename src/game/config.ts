@@ -9,10 +9,6 @@ import { lazy, type Component } from 'solid-js';
 import type { ViewportMode } from '@wolfgames/components/core';
 import type { ScreenId, ScreenAssetConfig } from '~/core/systems/screens/types';
 import { LoadingScreen } from './screens/LoadingScreen';
-import { ResultsScreen } from './screens/ResultsScreen';
-
-/** Game font family — loaded via @font-face in app.css */
-export const GAME_FONT_FAMILY = 'Baloo, system-ui, sans-serif';
 
 // ============================================================================
 // DATA TYPES
@@ -72,7 +68,9 @@ export const gameConfig: GameConfig = {
     loading: LoadingScreen,
     start: lazy(() => import('./screens/StartScreen')),
     game: lazy(() => import('./screens/GameScreen')),
-    results: ResultsScreen,
+    // Now Pixi-backed (RESULTS→PIXI conversion) — lazy like start/game so its match-pile Pixi
+    // module graph doesn't ship in the eagerly-loaded main chunk.
+    results: lazy(() => import('./screens/ResultsScreen')),
   },
   initialScreen: 'loading',
 };

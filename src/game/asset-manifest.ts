@@ -61,6 +61,15 @@ export const manifest: Manifest = {
       assets: [{ alias: 'atlas-branding-wolf', src: 'atlas-branding-wolf.json' }],
     },
 
+    // GPU — same branding atlas, loadable by Pixi (createSprite/getTexture/hasSheet — theme-*
+    // bundles are DOM-only and invisible to Pixi, see the header note above). Distinct alias
+    // required (aliases are unique across all bundles); same underlying file. Used by the
+    // match-pile start screen's Pixi-rendered logo (frame `logo-wide-small`).
+    {
+      name: 'core-branding',
+      assets: [{ alias: 'core-branding', src: 'atlas-branding-wolf.json' }],
+    },
+
     // GPU — in-game settings panel chrome (button plates, close icon, row
     // icons) for the catalog options-menu overlay.
     // ART TODO (ENG-4127): demo art via the local-assets fallback; regenerate
@@ -73,10 +82,9 @@ export const manifest: Manifest = {
     // ── Match Pile (GPU) ────────────────────────────────────────────────────
     // ART TODO (tier-a Phase 2): the board currently renders with placeholder
     // colour-coded Pixi Graphics discs — no GPU bundles yet. Once the object-pool
-    // tile art, celebration fx, and audio are generated and published (see
-    // tier-a/ASSET_SET.json + tier-a-assets-v4), add the real `scene-*`/`fx-*`/
-    // `audio-*` bundles here and load them in the controller. See the
-    // asset-pipeline rule.
+    // tile art and celebration fx are generated and published (see
+    // tier-a/ASSET_SET.json + tier-a-assets-v4), add the real `scene-*`/`fx-*`
+    // bundles here and load them in the controller. See the asset-pipeline rule.
     //
     // When adding bundles for your game, use the appropriate prefix:
     //
@@ -90,7 +98,19 @@ export const manifest: Manifest = {
     // Examples (GPU atlas JSON keeps its json-data/ prefix; audio JSON is top-level):
     //   { name: 'scene-tiles-match-pile', assets: [{ alias: 'scene-tiles-match-pile', src: 'json-data/atlas-tiles-match-pile.json' }] },
     //   { name: 'fx-blast', assets: [{ alias: 'fx-blast', src: 'json-data/vfx-blast.json' }] },
-    //   { name: 'audio-sfx-match-pile', assets: [{ alias: 'audio-sfx-match-pile', src: 'sfx-match-pile.json' }] },
-    //   { name: 'audio-music-match-pile', assets: [{ alias: 'audio-music-match-pile', src: 'music-match-pile.json' }] },
+
+    // ── Match Pile (Audio) ──────────────────────────────────────────────────
+    // SFX + BGM pass — audio-* bundles load via the Howler loader (loadAudio(),
+    // called from screens/startView.ts's PLAY handler). `alias` must equal the
+    // bundle `name`: coordinator.audio.play(channel, sprite) looks the Howl up
+    // by that same string (see audio/manager.ts's SFX_CHANNEL/MUSIC_CHANNEL).
+    {
+      name: 'audio-sfx-match-pile',
+      assets: [{ alias: 'audio-sfx-match-pile', src: 'sfx-match-pile.json' }],
+    },
+    {
+      name: 'audio-music-match-pile',
+      assets: [{ alias: 'audio-music-match-pile', src: 'music-match-pile.json' }],
+    },
   ],
 };

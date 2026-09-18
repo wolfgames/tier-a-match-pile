@@ -3,6 +3,7 @@ import { Portal } from 'solid-js/web';
 import { useRendererHost } from '@wolfgames/components/solid';
 import { useScreen, type ScreenId } from '~/core/systems/screens';
 import { useAssets } from '~/core/systems/assets';
+import { useAudio } from '~/core/systems/audio';
 import { useTuning, type ScaffoldTuning } from '~/core';
 import { useGameTracking } from '~/game/setup/tracking';
 
@@ -14,6 +15,7 @@ import { setupStartScreen } from '~/game/match-pile/screens/startView';
 export default function StartScreen() {
   const { goto } = useScreen();
   const { coordinator, initGpu, unlockAudio, loadCore, loadAudio, loadBundle } = useAssets();
+  const audio = useAudio();
   const tuning = useTuning<ScaffoldTuning, GameTuning>();
   const { trackGameStart } = useGameTracking();
   let containerRef: HTMLDivElement | undefined;
@@ -31,6 +33,12 @@ export default function StartScreen() {
     loadBundle,
     tuning,
     analytics: { trackGameStart },
+    audio: {
+      volume: audio.volume,
+      setVolume: audio.setVolume,
+      musicEnabled: audio.musicEnabled,
+      toggleMusic: audio.toggleMusic,
+    },
   });
 
   onMount(() => {

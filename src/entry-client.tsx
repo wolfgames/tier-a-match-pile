@@ -2,10 +2,10 @@
 import { render } from "solid-js/web";
 import { resolvePlayerId, whenStoresReady } from "~/core";
 import App from "./app";
+import "./game/match-pile/fontsReady";
 
-// Load game font in parallel with app mount (ready before any Pixi Text is created)
-const gameFont = new FontFace('Baloo', "url('/assets/fonts/Baloo-Regular.woff2')");
-gameFont.load().then((loaded) => document.fonts.add(loaded));
+// Importing fontsReady kicks off the Montserrat font-load in parallel with app mount
+// (see src/game/match-pile/fontsReady.ts) — game screens await it before first Pixi paint.
 
 // Resolve the stable player id, then let module-scope versioned stores hydrate
 // (allSettled — one store's backend failure can't reject boot), before first
